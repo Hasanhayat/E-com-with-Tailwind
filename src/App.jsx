@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+import logo from "./assets/logo.png";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
-    <div className='bg-red-500'>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="bg-gray-500 h-screen font-sans">
+      <div className="top w-screen h-8 bg-white items-center flex justify-around">
+        <div className="left text-gray-800 ">
+          <ul className="list-none flex items-center flex gap-2 text-[12px] cursor-pointer hover:underline font-light">
+            <li>ENGLISH</li>
+            <li>USD</li>
+          </ul>
+        </div>
+        <div className="right text-gray-800">
+          <ul className="list-none flex items-center flex gap-4 text-[12px] cursor-pointer hover:underline font-light">
+            <li>My Account</li>
+            <li>wishlish</li>
+            <li>checkout</li>
+            <li>login</li>
+          </ul>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <nav className="w-screen min-h-16 bg-gray-800 flex justify-around items-center">
+        <div className="logo">
+          <img src={logo} alt="logo" />
+        </div>
+        <div className="navlinks">
+          {" "}
+          <ul className="text-sm list-none flex items-center gap-x-7 text-2 text-white font-light">
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
+              HOME
+            </li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
+              PRODUCTS
+            </li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
+              {" "}
+              COLLECTION
+            </li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
+              PAGES
+            </li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
+              ABOUT US
+            </li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
+              CONTACT US
+            </li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer"></li>
+            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer"></li>
+          </ul>
+        </div>
+      </nav>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
