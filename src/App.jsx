@@ -55,15 +55,15 @@ function App() {
           </ul>
         </div>
       </nav>
-      <section className="hero max-h-[calc(100vh-64px)] flex items-center justify-around bg-theme overflow-hidden px-themePadding">
+      <section className="hero max-h-[calc(100vh-64px)] flex items-center justify-around bg-theme overflow- px-themePadding flex-col md:flex-row">
          <div className="contant flex flex-col ">
           <h4>New Arrivals</h4>
           <h1>New Style For Lamps</h1>
           <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut provident ut cupiditate, distinctio repudiandae, ab architecto facere porro quo delectus neque accusamus, enim nesciunt impedit quas assumenda! Architecto, dolores? Exercitationem?</p>
-          <button>Shop Now</button>
+          <button className="font-semibold text-sm rounded-sm hover:rotate-6 duration-700  w-28 text-center h-10 border bg-transparent">Shop Now</button>
          </div>
 
-        <img src={hero} alt=""  className=""/>
+        <img src={hero} alt=""  className="h-96"/>
 
       </section>
     </div>
