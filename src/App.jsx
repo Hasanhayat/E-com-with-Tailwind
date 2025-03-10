@@ -1,72 +1,25 @@
-import { useState } from "react";
-import "./App.css";
-import logo from "./assets/logo.png";
-import hero from "./assets/hero-img.png";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import ServicesPage from './pages/ServicesPage';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <div className="bg-theme min-h-screen font-sans">
-      <div className="top w-screen h-8 bg-white items-center flex justify-around">
-        <div className="left text-gray-800 ">
-          <ul className="list-none flex items-center flex gap-2 text-xs cursor-pointer hover:underline font-light">
-            <li>ENGLISH</li>
-            <li>USD</li>
-          </ul>
-        </div>
-        <div className="right text-gray-800">
-          <ul className="list-none flex items-center flex gap-4 text-xs cursor-pointer hover:underline font-light">
-            <li>My Account</li>
-            <li>wishlish</li>
-            <li>checkout</li>
-            <li>login</li>
-          </ul>
-        </div>
+    <Router>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+          </Routes>
+        </main>
+        <Footer />
       </div>
-      <nav className="w-screen min-h-16 bg-gray-800 flex justify-around items-center sticky top-0 ">
-        <div className="logo">
-          <img src={logo} alt="logo" />
-        </div>
-        <div className="navlinks hidden md:block">
-          {" "}
-          <ul className="text-sm list-none flex items-center gap-x-7 text-xs text-white font-light">
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
-              HOME
-            </li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
-              PRODUCTS
-            </li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
-              {" "}
-              COLLECTION
-            </li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
-              PAGES
-            </li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
-              ABOUT US
-            </li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer">
-              CONTACT US
-            </li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer"></li>
-            <li className="hover:text-blue-300 transition-all duration-700 cursor-pointer"></li>
-          </ul>
-        </div>
-      </nav>
-      <section className="hero max-h-[calc(100vh-64px)] flex items-center justify-around bg-theme overflow- px-themePadding flex-col md:flex-row">
-         <div className="contant flex flex-col ">
-          <h4>New Arrivals</h4>
-          <h1>New Style For Lamps</h1>
-          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut provident ut cupiditate, distinctio repudiandae, ab architecto facere porro quo delectus neque accusamus, enim nesciunt impedit quas assumenda! Architecto, dolores? Exercitationem?</p>
-          <button className="font-semibold text-sm rounded-sm hover:rotate-6 duration-700  w-28 text-center h-10 border bg-transparent">Shop Now</button>
-         </div>
-
-        <img src={hero} alt=""  className="h-96"/>
-
-      </section>
-    </div>
+    </Router>
   );
 }
 
