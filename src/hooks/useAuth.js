@@ -1,84 +1,92 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useDispatch } from 'react-redux';
+import { useState, useEffect } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { setUser, logout } from '../store/slices/authSlice';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
 
-export const useAuth = () => {
-  const dispatch = useDispatch();
+export function useAuth() {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const registerUser = async ({ email, password, name }) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    await setDoc(doc(db, 'users', user.uid), {
-      name,
-      email,
-      role: 'user',
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Get additional user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        const userData = userDoc.data();
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || userData?.name,
+          role: userData?.role || 'user',
+          ...userData,
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
     });
 
-    return user;
-  };
+    return () => unsubscribe();
+  }, []);
 
-  const loginUser = async ({ email, password }) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  };
-
-  const logoutUser = async () => {
-    await signOut(auth);
-    dispatch(logout());
-  };
-
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['user'],
-    queryFn: () => {
-      return new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            const userData = { ...user, ...userDoc.data() };
-            dispatch(setUser(userData));
-            resolve(userData);
-          } else {
-            dispatch(setUser(null));
-            resolve(null);
-          }
-          unsubscribe();
-        });
+  const register = async ({ name, email, password }) => {
+    try {
+      setError(null);
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Create user document in Firestore
+      await setDoc(doc(db, 'users', firebaseUser.uid), {
+        name,
+        email,
+        role: 'user',
+        createdAt: new Date().toISOString(),
       });
-    },
-  });
+      
+      return firebaseUser;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
-  const registerMutation = useMutation({
-    mutationFn: registerUser,
-  });
+  const login = async ({ email, password }) => {
+    try {
+      setError(null);
+      const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Update last login time
+      await setDoc(doc(db, 'users', firebaseUser.uid), {
+        lastLoginAt: new Date().toISOString(),
+      }, { merge: true });
+      
+      return firebaseUser;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
-  const loginMutation = useMutation({
-    mutationFn: loginUser,
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: logoutUser,
-  });
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error('Error signing out:', err);
+      throw err;
+    }
+  };
 
   return {
     user,
     isLoading,
-    register: registerMutation.mutate,
-    login: loginMutation.mutate,
-    logout: logoutMutation.mutate,
-    isRegistering: registerMutation.isLoading,
-    isLoggingIn: loginMutation.isLoading,
-    isLoggingOut: logoutMutation.isLoading,
-    registerError: registerMutation.error,
-    loginError: loginMutation.error,
-    logoutError: logoutMutation.error,
+    error,
+    register,
+    login,
+    logout,
   };
-}; 
+} 

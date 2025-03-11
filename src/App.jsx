@@ -17,7 +17,8 @@ import Register from './pages/Register';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
 import AdminOrders from './pages/admin/Orders';
-import AdminCustomers from './pages/admin/Customers';
+import AdminUsers from './pages/admin/Users';
+import AdminSettings from './pages/admin/Settings';
 
 const queryClient = new QueryClient();
 
@@ -33,11 +34,11 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
-                <Route path="/cart" element={<Cart />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 
                 <Route element={<PrivateRoute />}>
+                  <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                 </Route>
                 
@@ -45,7 +46,8 @@ function App() {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/products" element={<AdminProducts />} />
                   <Route path="/admin/orders" element={<AdminOrders />} />
-                  <Route path="/admin/customers" element={<AdminCustomers />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
                 </Route>
               </Routes>
             </main>
