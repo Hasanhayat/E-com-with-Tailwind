@@ -1,51 +1,203 @@
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { ShoppingBag, User, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
-function Navbar() {
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const cartItems = useSelector((state) => state.cart.items);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Shop', path: '/shop' },
+    { name: 'About', path: '/about' },
+    { name: 'Contact', path: '/contact' },
+  ];
+
+  const adminLinks = [
+    { name: 'Dashboard', path: '/admin' },
+    { name: 'Products', path: '/admin/products' },
+    { name: 'Orders', path: '/admin/orders' },
+    { name: 'Users', path: '/admin/users' },
+    { name: 'Settings', path: '/admin/settings' },
+  ];
+
   return (
-    <nav className="bg-[#00308F] text-white py-4 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-2">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-2xl font-bold"
-          >
-            <Link to="/" className="text-white hover:text-gray-200 transition-colors flex items-center">
-              <div className="flex items-center space-x-2">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_United_Arab_Emirates.svg" 
-                     alt="UAE Flag" 
-                     className="w-8 h-6 object-cover rounded shadow" />
-                <span className="text-3xl">🏛️</span>
-                <span>TawjeehQidfa</span>
-              </div>
+    <nav className="bg-white shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo and primary nav */}
+          <div className="flex">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <span className="text-2xl font-bold text-orange-600">Khattak Store</span>
             </Link>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center space-x-6"
-          >
-            <Link to="/" className="hover:text-gray-200 transition-colors">Home</Link>
-            <Link to="/about" className="hover:text-gray-200 transition-colors">About</Link>
-            <Link to="/services" className="hover:text-gray-200 transition-colors">Services</Link>
-            <Link to="/contact" className="hover:text-gray-200 transition-colors">Contact</Link>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-[#FF4500] text-white hover:bg-[#FF5722] px-6 py-2 rounded-lg transition-all shadow-lg flex items-center space-x-2"
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-orange-600"
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Secondary nav */}
+          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
+            {user ? (
+              <>
+                <Link to="/cart" className="relative">
+                  <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-orange-600" />
+                  {cartItems.length > 0 && (
+                    <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-orange-600 flex items-center justify-center text-white text-xs">
+                      {cartItems.length}
+                    </span>
+                  )}
+                </Link>
+                <div className="relative group">
+                  <button className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
+                    <User className="h-6 w-6" />
+                  </button>
+                  <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block">
+                    <div className="py-1">
+                      {user.role === 'admin' && adminLinks.map((link) => (
+                        <Link
+                          key={link.path}
+                          to={link.path}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="space-x-4">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="flex items-center sm:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-orange-600 hover:bg-gray-100"
             >
-              <span>Get Started</span>
-              <span className="text-xl">→</span>
-            </motion.button>
-          </motion.div>
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      <motion.div
+        initial={false}
+        animate={isMenuOpen ? "open" : "closed"}
+        variants={{
+          open: { opacity: 1, height: "auto" },
+          closed: { opacity: 0, height: 0 }
+        }}
+        className="sm:hidden"
+      >
+        <div className="pt-2 pb-3 space-y-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="block pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {link.name}
+            </Link>
+          ))}
+          {user ? (
+            <>
+              <Link
+                to="/cart"
+                className="block pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Cart ({cartItems.length})
+              </Link>
+              {user.role === 'admin' && adminLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="block pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <div className="space-y-1 px-3 pb-3">
+              <Link
+                to="/login"
+                className="block w-full px-4 py-2 text-center text-sm font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50 border border-orange-600"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="block w-full px-4 py-2 text-center text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Register
+              </Link>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </nav>
   );
-}
-
-export default Navbar; 
+} 
