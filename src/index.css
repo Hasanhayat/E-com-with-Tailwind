@@ -36,9 +36,15 @@
 
 @layer components {
   .glass {
-    @apply bg-white/5 backdrop-blur-md;
-    transform: translateZ(0);
-    will-change: transform;
+    @apply bg-black/5 backdrop-blur-[2px];
+  }
+
+  .glass-strong {
+    @apply bg-black/10 backdrop-blur-[5px];
+  }
+
+  .card {
+    @apply bg-gradient-to-br from-white/10 to-white/5 shadow-lg;
   }
 }
 
