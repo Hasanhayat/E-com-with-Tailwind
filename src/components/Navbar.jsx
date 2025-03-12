@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { ShoppingBag, User, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -18,6 +19,10 @@ export default function Navbar() {
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  const handleProfileClick = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   const navLinks = [
@@ -70,7 +75,7 @@ export default function Navbar() {
                   )}
                 </Link>
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
+                  <button onClick={handleProfileClick} className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
                     <User className="h-6 w-6" />
                   </button>
                   <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block">
