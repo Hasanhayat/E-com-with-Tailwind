@@ -26,16 +26,6 @@ export default function Navbar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleMouseEnter = () => {
-    setIsDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    setTimeout(() => {
-      setIsDropdownOpen(false);
-    }, 300); // Delay to allow interaction
-  };
-
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Shop', path: '/shop' },
@@ -86,15 +76,15 @@ export default function Navbar() {
                   )}
                 </Link>
                 <div
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={() => setIsDropdownOpen(true)}
+                  onMouseLeave={() => setIsDropdownOpen(false)}
                   className="relative"
                 >
-                  <button onClick={handleProfileClick} className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
+                  <button className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
                     <User className="h-6 w-6" />
                   </button>
                   {isDropdownOpen && (
-                    <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block">
+                    <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                       <div className="py-1">
                         {user.role === 'admin' && adminLinks.map((link) => (
                           <Link

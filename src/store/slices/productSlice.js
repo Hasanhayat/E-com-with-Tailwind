@@ -51,4 +51,4 @@ export const {
   clearFilters,
 } = productSlice.actions;
 
-export default productSlice.reducer; 
+export default productSlice.reducer;

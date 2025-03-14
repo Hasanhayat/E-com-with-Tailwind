@@ -48,12 +48,6 @@
   }
 }
 
-/* Fix for blur issue */
-.blur-fix {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
 /* Custom Animations */
 @keyframes float {
   0% { transform: translateY(0px); }
