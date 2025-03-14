@@ -11,6 +11,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const cartItems = useSelector((state) => state.cart.items);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -23,6 +24,16 @@ export default function Navbar() {
 
   const handleProfileClick = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleMouseEnter = () => {
+    setIsDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    setTimeout(() => {
+      setIsDropdownOpen(false);
+    }, 300); // Delay to allow interaction
   };
 
   const navLinks = [
@@ -74,29 +85,35 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
-                <div className="relative group">
+                <div
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  className="relative"
+                >
                   <button onClick={handleProfileClick} className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
                     <User className="h-6 w-6" />
                   </button>
-                  <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block">
-                    <div className="py-1">
-                      {user.role === 'admin' && adminLinks.map((link) => (
-                        <Link
-                          key={link.path}
-                          to={link.path}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block">
+                      <div className="py-1">
+                        {user.role === 'admin' && adminLinks.map((link) => (
+                          <Link
+                            key={link.path}
+                            to={link.path}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          {link.name}
-                        </Link>
-                      ))}
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Logout
-                      </button>
+                          Logout
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </>
             ) : (

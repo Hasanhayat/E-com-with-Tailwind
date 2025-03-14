@@ -1,10 +1,12 @@
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../hooks/useProducts';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const { products } = useProducts();
   const { items } = useSelector((state) => state.cart);
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -27,6 +29,12 @@ export default function AdminDashboard() {
       value: '25',
       icon: '👥',
     },
+  ];
+
+  const quickActions = [
+    { name: 'Add Product', icon: '➕', color: 'bg-green-500', path: '/admin/products' },
+    { name: 'View Orders', icon: '📋', color: 'bg-blue-500', path: '/admin/orders' },
+    { name: 'Manage Users', icon: '👥', color: 'bg-purple-500', path: '/admin/users' },
   ];
 
   return (
@@ -110,11 +118,7 @@ export default function AdminDashboard() {
       <div className="mt-8">
         <h3 className="text-lg leading-6 font-medium text-gray-900">Quick Actions</h3>
         <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { name: 'Add Product', icon: '➕', color: 'bg-green-500' },
-            { name: 'View Orders', icon: '📋', color: 'bg-blue-500' },
-            { name: 'Manage Users', icon: '👥', color: 'bg-purple-500' },
-          ].map((action, index) => (
+          {quickActions.map((action, index) => (
             <motion.button
               key={action.name}
               whileHover={{ scale: 1.02 }}
@@ -123,6 +127,7 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`${action.color} p-4 rounded-lg text-white flex items-center justify-center space-x-2`}
+              onClick={() => navigate(action.path)}
             >
               <span className="text-2xl">{action.icon}</span>
               <span className="font-medium">{action.name}</span>

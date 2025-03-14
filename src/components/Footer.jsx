@@ -5,23 +5,23 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
-    Shop: [
-      { name: 'All Products', href: '/shop' },
-      { name: "Men's Collection", href: '/shop?category=men' },
-      { name: "Women's Collection", href: '/shop?category=women' },
-      { name: "Kid's Collection", href: '/shop?category=kids' },
+    shop: [
+      { name: 'All Products', path: '/shop' },
+      { name: 'Men\'s Collection', path: '/shop/mens' },
+      { name: 'Women\'s Collection', path: '/shop/womens' },
+      { name: 'Kid\'s Collection', path: '/shop/kids' },
     ],
-    Company: [
-      { name: 'About Us', href: '/about' },
-      { name: 'Contact', href: '/contact' },
-      { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms of Service', href: '/terms' },
+    company: [
+      { name: 'About Us', path: '/about' },
+      { name: 'Contact', path: '/contact' },
+      { name: 'Privacy Policy', path: '/privacy' },
+      { name: 'Terms of Service', path: '/terms' },
     ],
-    Support: [
-      { name: 'FAQs', href: '/faqs' },
-      { name: 'Shipping Info', href: '/shipping' },
-      { name: 'Returns', href: '/returns' },
-      { name: 'Track Order', href: '/track-order' },
+    support: [
+      { name: 'FAQs', path: '/faqs' },
+      { name: 'Shipping Info', path: '/shipping' },
+      { name: 'Returns', path: '/returns' },
+      { name: 'Track Order', path: '/track-order' },
     ],
   };
 
@@ -30,6 +30,12 @@ export default function Footer() {
     { name: 'Instagram', icon: Instagram, href: 'https://instagram.com' },
     { name: 'Twitter', icon: Twitter, href: 'https://twitter.com' },
   ];
+
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    // Add logic to handle newsletter subscription
+    alert('Subscribed to newsletter!');
+  };
 
   return (
     <footer className="bg-white border-t">
@@ -72,7 +78,7 @@ export default function Footer() {
                 {links.map((link) => (
                   <li key={link.name}>
                     <Link
-                      to={link.href}
+                      to={link.path}
                       className="text-base text-gray-600 hover:text-orange-600"
                     >
                       {link.name}
@@ -95,12 +101,13 @@ export default function Footer() {
                 Get the latest updates, sales and special offers.
               </p>
             </div>
-            <form className="mt-4 sm:mt-0">
+            <form onSubmit={handleNewsletterSubmit} className="mt-4 sm:mt-0">
               <div className="flex">
                 <input
                   type="email"
                   placeholder="Enter your email"
                   className="min-w-0 flex-1 rounded-l-md border border-gray-300 px-4 py-2 text-base text-gray-900 placeholder-gray-500 focus:border-orange-500 focus:ring-orange-500"
+                  required
                 />
                 <button
                   type="submit"

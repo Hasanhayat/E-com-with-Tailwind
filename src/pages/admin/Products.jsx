@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../hooks/useProducts';
+import { uploadToCloudinary } from '../../utils/cloudinary';
 
 export default function AdminProducts() {
   const { products, isLoading, addProduct, updateProduct, deleteProduct } = useProducts();
@@ -13,6 +14,7 @@ export default function AdminProducts() {
     description: '',
     image: null,
   });
+  const [image, setImage] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -20,6 +22,15 @@ export default function AdminProducts() {
       setFormData({ ...formData, image: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleImageUpload = async (file) => {
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      setImage(imageUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
     }
   };
 
@@ -270,7 +281,7 @@ export default function AdminProducts() {
                     <input
                       type="file"
                       name="image"
-                      onChange={handleChange}
+                      onChange={(e) => handleImageUpload(e.target.files[0])}
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                       accept="image/*"
                     />

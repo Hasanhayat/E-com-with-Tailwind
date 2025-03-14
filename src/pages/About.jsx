@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 
 export default function About() {
@@ -15,10 +16,14 @@ export default function About() {
   ];
 
   return (
-    <div className='container mx-auto px-4 py-8'>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-4">About Us</h1>
+      <p className="mb-4">Welcome to Khattak Store, your number one source for all things fashion. We're dedicated to giving you the very best of clothing, with a focus on quality, customer service, and uniqueness.</p>
+      <h2 className="text-2xl font-semibold mb-2">Our Mission</h2>
+      <p className="mb-4">Our mission is to provide the latest trends at the best prices, ensuring quality and customer satisfaction.</p>
+      <h2 className="text-2xl font-semibold mb-2">Our Team</h2>
+      <p>Meet our dedicated team who work tirelessly to bring you the best shopping experience.</p>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-        <h1 className='text-3xl font-bold mb-4'>About Khattak Store</h1>
-        <p className='mb-8'>Khattak Store is committed to providing the best shopping experience with quality products and excellent customer service.</p>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8'>
           {features.map((feature, index) => (
             <div key={index} className='bg-white p-6 rounded-lg shadow-md'>
