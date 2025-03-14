@@ -150,7 +150,7 @@ export default function Navbar() {
         }}
         className="sm:hidden"
       >
-        <div className="pt-2 pb-3 space-y-1">
+        <div className="pt-2 pb-3 space-y-1 z-50">
           {navLinks.map((link) => (
             <Link
               key={link.path}
