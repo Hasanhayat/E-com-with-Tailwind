@@ -4,12 +4,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useProducts } from '../hooks/useProducts';
 import { updateFilters, clearFilters } from '../store/slices/productSlice';
 import { Loader } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { addToCart } from '../store/slices/cartSlice';
 
 export default function Shop() {
   const dispatch = useDispatch();
   const { products, isLoading } = useProducts();
   const filters = useSelector((state) => state.products.filters);
   const [priceRange, setPriceRange] = useState(filters.priceRange);
+  const [loading, setLoading] = useState(false);
+  const [loadingProductId, setLoadingProductId] = useState(null);
 
   const categories = ['all', 'men', 'women', 'kids'];
   const sortOptions = [
@@ -25,6 +29,15 @@ export default function Shop() {
   const handlePriceChange = (value) => {
     setPriceRange(value);
     dispatch(updateFilters({ priceRange: value }));
+  };
+
+  const handleAddToCart = (product) => {
+    setLoadingProductId(product.id);
+    setTimeout(() => {
+      dispatch(addToCart(product));
+      setLoadingProductId(null);
+      toast.success(`${product.name} added to cart!`);
+    }, 1000);
   };
 
   const handleImageUpload = async (file) => {
@@ -130,7 +143,9 @@ export default function Shop() {
 
       {/* Products Grid */}
       {isLoading ? (
-        <div className="text-center py-12">Loading...</div>
+        <div className="text-center py-12">
+          <Loader className="animate-spin text-orange-600" size={48} />
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {sortedProducts.map((product, index) => (
@@ -154,10 +169,11 @@ export default function Shop() {
                 <div className="mt-2 flex items-center justify-between">
                   <p className="text-lg font-medium text-gray-900">${product.price}</p>
                   <button
-                    className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
-                    onClick={() => {/* Add to cart logic */}}
+                    className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors flex items-center justify-center"
+                    onClick={() => handleAddToCart(product)}
+                    disabled={loadingProductId === product.id}
                   >
-                    Add to Cart
+                    {loadingProductId === product.id ? <Loader className="animate-spin mr-2" size={16} /> : 'Add to Cart'}
                   </button>
                 </div>
               </div>
