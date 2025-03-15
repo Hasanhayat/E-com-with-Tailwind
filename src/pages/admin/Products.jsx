@@ -28,7 +28,7 @@ export default function AdminProducts() {
   const handleImageUpload = async (file) => {
     try {
       const imageUrl = await uploadToCloudinary(file);
-      setImage(imageUrl);
+      setFormData((prevData) => ({ ...prevData, image: imageUrl }));
     } catch (error) {
       console.error('Error uploading image:', error);
     }
@@ -37,26 +37,22 @@ export default function AdminProducts() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const productData = {
+        name: formData.name,
+        category: formData.category,
+        price: parseFloat(formData.price),
+        description: formData.description,
+        image: formData.image,
+      };
+
       if (selectedProduct) {
         await updateProduct({
           id: selectedProduct.id,
-          productData: {
-            name: formData.name,
-            category: formData.category,
-            price: parseFloat(formData.price),
-            description: formData.description,
-          },
-          image: formData.image,
+          productData,
         });
       } else {
         await addProduct({
-          productData: {
-            name: formData.name,
-            category: formData.category,
-            price: parseFloat(formData.price),
-            description: formData.description,
-          },
-          image: formData.image,
+          productData,
         });
       }
       setIsModalOpen(false);

@@ -2,8 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { ShoppingBag, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { ShoppingBag, User, Menu, X, Loader } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 export default function Navbar() {
@@ -12,6 +12,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const cartItems = useSelector((state) => state.cart.items);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const handleLogout = async () => {
     try {
@@ -41,8 +42,22 @@ export default function Navbar() {
     { name: 'Settings', path: '/admin/settings' },
   ];
 
+  useEffect(() => {
+    // Simulate a loading state
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
+        <Loader className="animate-spin text-orange-600" size={48} />
+      </div>
+    );
+  }
+
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and primary nav */}
@@ -77,14 +92,14 @@ export default function Navbar() {
                 </Link>
                 <div
                   onMouseEnter={() => setIsDropdownOpen(true)}
-                  onMouseLeave={() => setIsDropdownOpen(false)}
+                  // onMouseLeave={() => setIsDropdownOpen(false)}
                   className="relative"
                 >
                   <button className="flex items-center space-x-2 text-gray-700 hover:text-orange-600">
                     <User className="h-6 w-6" />
                   </button>
                   {isDropdownOpen && (
-                    <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div onMouseLeave={() => setIsDropdownOpen(false)} className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 z-50 ring-black ring-opacity-5 focus:outline-none">
                       <div className="py-1">
                         {user.role === 'admin' && adminLinks.map((link) => (
                           <Link
