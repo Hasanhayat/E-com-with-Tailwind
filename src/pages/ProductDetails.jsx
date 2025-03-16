@@ -1,25 +1,69 @@
 import { useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import { addToCart } from '../store/slices/cartSlice';
+import { Loader, ShoppingCart } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+// Placeholder image for fallback
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/600x600?text=No+Image';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { products, isLoading } = useProducts();
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  
+  useEffect(() => {
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+  
   const product = products?.find(p => p.id === id);
 
   const handleAddToCart = () => {
-    dispatch(addToCart(product));
+    setLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        dispatch(addToCart(product));
+        toast.success(`${product.name} added to cart!`);
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        toast.error('Failed to add product to cart');
+      } finally {
+        setLoading(false);
+      }
+    }, 800);
   };
 
-  if (isLoading) {
-    return <div className="text-center py-12">Loading...</div>;
+  if (pageLoading || isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col items-center justify-center py-32">
+          <Loader className="animate-spin text-orange-600 mb-4" size={48} />
+          <p className="text-gray-600 text-lg">Loading product details...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!product) {
-    return <div className="text-center py-12">Product not found</div>;
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
+          <p className="text-gray-600">The product you're looking for doesn't exist or has been removed.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -30,12 +74,16 @@ export default function ProductDetails() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="aspect-w-1 aspect-h-1"
+          className="aspect-w-1 aspect-h-1 bg-gray-100 rounded-lg overflow-hidden"
         >
           <img
-            src={product.imageUrl}
+            src={product.imageUrl || product.image || PLACEHOLDER_IMAGE}
             alt={product.name}
             className="w-full h-full object-cover object-center rounded-lg"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = PLACEHOLDER_IMAGE;
+            }}
           />
         </motion.div>
 
@@ -52,13 +100,13 @@ export default function ProductDetails() {
           
           <div className="mt-3">
             <h2 className="sr-only">Product information</h2>
-            <p className="text-3xl text-gray-900">${product.price}</p>
+            <p className="text-3xl text-gray-900">${parseFloat(product.price).toFixed(2)}</p>
           </div>
 
           <div className="mt-6">
             <h3 className="sr-only">Description</h3>
             <div className="text-base text-gray-700 space-y-6">
-              <p>{product.description}</p>
+              <p>{product.description || 'No description available for this product.'}</p>
             </div>
           </div>
 
@@ -67,9 +115,20 @@ export default function ProductDetails() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAddToCart}
-              className="w-full bg-orange-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              disabled={loading}
+              className="w-full bg-orange-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Add to Cart
+              {loading ? (
+                <>
+                  <Loader className="animate-spin mr-2" size={20} />
+                  Adding to Cart...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="mr-2" size={20} />
+                  Add to Cart
+                </>
+              )}
             </motion.button>
           </div>
 
@@ -77,7 +136,7 @@ export default function ProductDetails() {
           <div className="mt-10">
             <h2 className="text-sm font-medium text-gray-900">Details</h2>
             <div className="mt-4 space-y-6">
-              <p className="text-sm text-gray-600">{product.details}</p>
+              <p className="text-sm text-gray-600">{product.details || 'No additional details available for this product.'}</p>
             </div>
           </div>
 
@@ -89,7 +148,7 @@ export default function ProductDetails() {
                 {['S', 'M', 'L', 'XL'].map((size) => (
                   <div
                     key={size}
-                    className="border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase hover:border-gray-400 focus:outline-none"
+                    className="border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase hover:border-gray-400 focus:outline-none cursor-pointer"
                   >
                     {size}
                   </div>
