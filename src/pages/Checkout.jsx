@@ -107,6 +107,7 @@ const Checkout = () => {
     
     if (items.length === 0) {
       toast.error('Your cart is empty. Please add items to checkout.');
+      navigate('/shop');
       return;
     }
     
@@ -145,16 +146,20 @@ const Checkout = () => {
       
       console.log('Submitting order:', orderData);
       const createdOrder = await createOrder(orderData);
+      console.log('Order created successfully:', createdOrder);
       
-      // Clear cart after successful order
-      dispatch(clearCart());
-      
-      toast.success('Order placed successfully!');
-      
-      // Navigate to order confirmation page
+      // Clear cart after successful order - IMPORTANT: Do this AFTER order creation
       if (createdOrder && createdOrder.id) {
+        // First show success message
+        toast.success('Order placed successfully!');
+        
+        // Then clear the cart
+        dispatch(clearCart());
+        
+        // Finally navigate to success page
         navigate(`/order-success/${createdOrder.id}`);
       } else {
+        toast.error('Order was created but no ID was returned');
         navigate('/thank-you');
       }
     } catch (error) {

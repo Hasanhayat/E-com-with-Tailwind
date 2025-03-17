@@ -14,6 +14,7 @@ const Orders = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState({});
 
+  // Define orderStatuses here since it's not coming from useOrders
   const orderStatuses = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'processing', label: 'Processing', color: 'bg-blue-100 text-blue-800' },
@@ -251,9 +252,9 @@ const Orders = () => {
       )}
 
       {selectedOrder && (
-        <OrderDetail 
-          order={selectedOrder} 
-          onClose={() => setSelectedOrder(null)} 
+        <OrderDetail
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
         />
       )}
     </div>
