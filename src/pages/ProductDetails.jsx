@@ -7,8 +7,9 @@ import { addToCart } from '../store/slices/cartSlice';
 import { Loader, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// Placeholder image for fallback
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/600x600?text=No+Image';
+// Local placeholder image instead of via.placeholder.com
+const placeholderImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22600%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A30pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22220.5%22%20y%3D%22314.1%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+const errorImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22600%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23FF5555%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A30pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22%23FFEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22220.5%22%20y%3D%22314.1%22%3EError%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -77,12 +78,12 @@ export default function ProductDetails() {
           className="aspect-w-1 aspect-h-1 bg-gray-100 rounded-lg overflow-hidden"
         >
           <img
-            src={product.imageUrl || product.image || PLACEHOLDER_IMAGE}
+            src={product.imageUrl || product.image || placeholderImage}
             alt={product.name}
             className="w-full h-full object-cover object-center rounded-lg"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = PLACEHOLDER_IMAGE;
+              e.target.src = errorImage;
             }}
           />
         </motion.div>

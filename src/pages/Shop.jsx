@@ -4,61 +4,134 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { useProducts } from '../hooks/useProducts';
 import { updateFilters, clearFilters } from '../store/slices/productSlice';
-import { Loader, ShoppingCart } from 'lucide-react';
+import { Loader, ShoppingCart, Heart, Star, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addToCart } from '../store/slices/cartSlice';
 
-// Placeholder image for fallback
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/300x300?text=No+Image';
+// Local placeholder image instead of via.placeholder.com
+const placeholderImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+const errorImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23FF5555%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23FFEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3EError%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
 
 // Memoized Product Card Component
-const ProductCard = React.memo(({ product, onAddToCart, isLoading }) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-  >
-    <Link to={`/product/${product.id}`} className="block">
-      <div className="relative aspect-w-1 aspect-h-1 bg-gray-200">
-        <img
-          className="w-full h-64 object-cover object-center transition-opacity duration-300"
-          src={product.imageUrl || product.image || PLACEHOLDER_IMAGE}
-          alt={product.name}
-          loading="lazy"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = PLACEHOLDER_IMAGE;
-          }}
-        />
-      </div>
-      <div className="p-4">
-        <h3 className="text-lg font-medium text-gray-900 truncate">{product.name}</h3>
-        <p className="mt-1 text-sm text-gray-500 capitalize">{product.category}</p>
-        <div className="mt-2 flex items-center justify-between">
-          <p className="text-lg font-medium text-gray-900">${parseFloat(product.price).toFixed(2)}</p>
+const ProductCard = React.memo(({ product, onAddToCart, isLoading }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Generate random rating between 3.5 and 5.0
+  const rating = useMemo(() => (Math.random() * 1.5 + 3.5).toFixed(1), []);
+  
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative">
+        <Link to={`/product/${product.id}`} className="block">
+          <div className="relative overflow-hidden bg-gray-100">
+            <img
+              className="w-full h-64 object-cover object-center transition-transform duration-500 ease-in-out"
+              style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
+              src={product.imageUrl || product.image || placeholderImage}
+              alt={product.name}
+              loading="lazy"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = errorImage;
+              }}
+            />
+            
+            {/* Discount badge if applicable */}
+            {product.discount && (
+              <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+                {product.discount}% OFF
+              </div>
+            )}
+            
+            {/* Quick action buttons */}
+            <div 
+              className={`absolute right-2 top-2 flex flex-col gap-2 transition-opacity duration-300 ${
+                isHovered ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <button 
+                className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast.success('Added to wishlist!');
+                }}
+              >
+                <Heart size={18} className="text-gray-600" />
+              </button>
+              <button 
+                className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/product/${product.id}`;
+                }}
+              >
+                <Eye size={18} className="text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </Link>
+        
+        <div className="p-4">
+          <div className="flex items-center mb-1">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  size={14} 
+                  className={i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} 
+                />
+              ))}
+            </div>
+            <span className="text-xs text-gray-500 ml-1">({rating})</span>
+          </div>
+          
+          <Link to={`/product/${product.id}`} className="block">
+            <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors truncate">{product.name}</h3>
+          </Link>
+          
+          <p className="mt-1 text-sm text-gray-500 capitalize">{product.category}</p>
+          
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center">
+              <p className="text-lg font-bold text-gray-900">PKR {parseFloat(product.price).toFixed(2)}</p>
+              {product.oldPrice && (
+                <p className="ml-2 text-sm text-gray-500 line-through">PKR {parseFloat(product.oldPrice).toFixed(2)}</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </Link>
-    <div className="px-4 pb-4">
-      <button
-        onClick={() => onAddToCart(product)}
-        disabled={isLoading}
-        className="w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isLoading ? (
-          <Loader className="animate-spin" size={16} />
-        ) : (
-          <>
-            <ShoppingCart size={16} />
-            Add to Cart
-          </>
-        )}
-      </button>
-    </div>
-  </motion.div>
-));
+      
+      <div className="px-4 pb-4">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onAddToCart(product);
+          }}
+          disabled={isLoading}
+          className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? (
+            <Loader size={18} className="animate-spin" />
+          ) : (
+            <>
+              <ShoppingCart size={18} />
+              Add to Cart
+            </>
+          )}
+        </button>
+      </div>
+    </motion.div>
+  );
+});
 
 // Memoized Filter Component
 const Filters = React.memo(({ filters, categories, sortOptions, onFilterChange, onPriceChange, priceRange, onClearFilters }) => (
