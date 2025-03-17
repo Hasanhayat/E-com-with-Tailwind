@@ -21,6 +21,7 @@ import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
 import { Loader } from 'lucide-react';
 import { useState, useEffect, createContext } from 'react';
+import OrderSuccess from './pages/OrderSuccess';
 
 // Create a loading context
 export const LoadingContext = createContext({
@@ -78,6 +79,9 @@ function AppContent() {
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
               </Route>
+
+              <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+              <Route path="/thank-you" element={<OrderSuccess />} />
             </Routes>
           </main>
           <Footer />

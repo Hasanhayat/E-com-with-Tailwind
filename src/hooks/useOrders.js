@@ -1,16 +1,53 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, addDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, addDoc, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import toast from 'react-hot-toast';
+import { useAuth } from './useAuth';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const unsubscribe = subscribeToOrders();
+    return () => unsubscribe();
+  }, [user]);
+
+  const subscribeToOrders = () => {
+    setIsLoading(true);
+    try {
+      const ordersCollection = collection(db, 'orders');
+      const ordersQuery = query(ordersCollection, orderBy('createdAt', 'desc'));
+      
+      const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+        if (snapshot.empty) {
+          console.log('No orders found');
+          setOrders([]);
+        } else {
+          const ordersData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setOrders(ordersData);
+        }
+        setIsLoading(false);
+      }, (err) => {
+        console.error('Error subscribing to orders:', err);
+        setError(err.message);
+        setIsLoading(false);
+        toast.error('Failed to load orders');
+      });
+      
+      return unsubscribe;
+    } catch (err) {
+      console.error('Error setting up orders subscription:', err);
+      setError(err.message);
+      setIsLoading(false);
+      return () => {};
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -72,11 +109,14 @@ export function useOrders() {
         throw new Error('Order data is required');
       }
       
+      // Ensure required fields
       const newOrder = {
         ...orderData,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
+        status: orderData.status || 'pending',
+        createdAt: orderData.createdAt || new Date().toISOString(),
       };
+      
+      console.log('Creating new order:', newOrder);
       
       const docRef = await addDoc(collection(db, 'orders'), newOrder);
       
@@ -85,8 +125,10 @@ export function useOrders() {
         ...newOrder
       };
       
+      console.log('Order created successfully:', createdOrder);
+      
       // Update local state
-      setOrders([createdOrder, ...orders]);
+      setOrders(prevOrders => [createdOrder, ...prevOrders]);
       
       return createdOrder;
     } catch (err) {
