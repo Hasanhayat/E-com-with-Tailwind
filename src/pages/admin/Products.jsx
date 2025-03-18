@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../hooks/useProducts';
 import { uploadToCloudinary } from '../../utils/cloudinary';
+import { Loader } from 'lucide-react';
+
+// Define placeholder and error images
+const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-size='12' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' fill='%23999999'%3EImage%3C/text%3E%3C/svg%3E";
+const errorImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f8d7da'/%3E%3Ctext x='50%25' y='50%25' font-size='8' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' fill='%23721c24'%3EError%3C/text%3E%3C/svg%3E";
 
 export default function AdminProducts() {
   const { products, isLoading, addProduct, updateProduct, deleteProduct } = useProducts();
@@ -15,6 +20,7 @@ export default function AdminProducts() {
     image: null,
   });
   const [image, setImage] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -27,10 +33,13 @@ export default function AdminProducts() {
 
   const handleImageUpload = async (file) => {
     try {
+      setImageLoading(true);
       const imageUrl = await uploadToCloudinary(file);
       setFormData((prevData) => ({ ...prevData, image: imageUrl }));
     } catch (error) {
       console.error('Error uploading image:', error);
+    } finally {
+      setImageLoading(false);
     }
   };
 
@@ -42,17 +51,19 @@ export default function AdminProducts() {
         category: formData.category,
         price: parseFloat(formData.price),
         description: formData.description,
-        image: formData.image,
+        imageUrl: formData.image, // Make sure we're using imageUrl consistently
       };
 
       if (selectedProduct) {
         await updateProduct({
           id: selectedProduct.id,
           productData,
+          image: formData.image instanceof File ? formData.image : null,
         });
       } else {
         await addProduct({
           productData,
+          image: formData.image instanceof File ? formData.image : null,
         });
       }
       setIsModalOpen(false);
@@ -76,7 +87,7 @@ export default function AdminProducts() {
       category: product.category,
       price: product.price.toString(),
       description: product.description || '',
-      image: null,
+      image: product.imageUrl, // Use imageUrl here
     });
     setIsModalOpen(true);
   };
@@ -163,8 +174,12 @@ export default function AdminProducts() {
                             <div className="h-10 w-10 flex-shrink-0">
                               <img
                                 className="h-10 w-10 rounded-full object-cover"
-                                src={product.imageUrl}
+                                src={product.imageUrl || placeholderImage}
                                 alt={product.name}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = errorImage;
+                                }}
                               />
                             </div>
                             <div className="ml-4">

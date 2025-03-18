@@ -36,6 +36,13 @@ const Checkout = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
 
+  const [cardData, setCardData] = useState({
+    cardNumber: '',
+    cardExpiry: '',
+    cardCvv: '',
+    cardName: ''
+  });
+
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -69,6 +76,43 @@ const Checkout = () => {
     }
   };
 
+  const handleCardChange = (e) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+    
+    // Format card number with spaces every 4 digits
+    if (name === 'cardNumber') {
+      formattedValue = value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+    }
+    
+    // Format expiry date with slash
+    if (name === 'cardExpiry') {
+      formattedValue = value.replace(/\//g, '');
+      if (formattedValue.length > 2) {
+        formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2, 4);
+      }
+      formattedValue = formattedValue.slice(0, 5);
+    }
+    
+    // Limit CVV to 3-4 digits
+    if (name === 'cardCvv') {
+      formattedValue = value.slice(0, 4);
+    }
+    
+    setCardData(prev => ({
+      ...prev,
+      [name]: formattedValue
+    }));
+    
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
   const validateStep = (step) => {
     const newErrors = {};
     
@@ -86,6 +130,25 @@ const Checkout = () => {
       if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
       else if (!/^\d{5}$/.test(formData.postalCode)) 
         newErrors.postalCode = 'Postal code should be 5 digits';
+    } else if (step === 3 && formData.paymentMethod === 'card') {
+      // Validate card details only if payment method is card
+      if (!cardData.cardNumber.trim()) 
+        newErrors.cardNumber = 'Card number is required';
+      else if (!/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/.test(cardData.cardNumber)) 
+        newErrors.cardNumber = 'Invalid card number format (should be 16 digits)';
+      
+      if (!cardData.cardExpiry.trim()) 
+        newErrors.cardExpiry = 'Expiry date is required';
+      else if (!/^\d{2}\/\d{2}$/.test(cardData.cardExpiry)) 
+        newErrors.cardExpiry = 'Invalid expiry date format (MM/YY)';
+      
+      if (!cardData.cardCvv.trim()) 
+        newErrors.cardCvv = 'CVV is required';
+      else if (!/^\d{3,4}$/.test(cardData.cardCvv)) 
+        newErrors.cardCvv = 'CVV should be 3-4 digits';
+      
+      if (!cardData.cardName.trim()) 
+        newErrors.cardName = 'Card holder name is required';
     }
     
     setErrors(newErrors);
@@ -103,7 +166,10 @@ const Checkout = () => {
   };
 
   const handleSubmit = async () => {
-    // No need to validate step 3 as it's just payment method selection
+    // Validate card details if payment method is card
+    if (formData.paymentMethod === 'card' && !validateStep(3)) {
+      return;
+    }
     
     if (items.length === 0) {
       toast.error('Your cart is empty. Please add items to checkout.');
@@ -137,6 +203,11 @@ const Checkout = () => {
           method: formData.paymentMethod,
           status: formData.paymentMethod === 'cod' ? 'pending' : 'paid',
           transactionId: formData.paymentMethod === 'cod' ? null : `txn_${Date.now()}`,
+          cardDetails: formData.paymentMethod === 'card' ? {
+            cardNumber: `xxxx-xxxx-xxxx-${cardData.cardNumber.slice(-4)}`, // Store only last 4 digits for security
+            cardName: cardData.cardName,
+            cardExpiry: cardData.cardExpiry
+          } : null
         },
         notes: formData.notes,
         totalAmount: totalAmount,
@@ -148,20 +219,21 @@ const Checkout = () => {
       const createdOrder = await createOrder(orderData);
       console.log('Order created successfully:', createdOrder);
       
-      // Clear cart after successful order - IMPORTANT: Do this AFTER order creation
-      if (createdOrder && createdOrder.id) {
-        // First show success message
-        toast.success('Order placed successfully!');
-        
-        // Then clear the cart
-        dispatch(clearCart());
-        
-        // Finally navigate to success page
-        navigate(`/order-success/${createdOrder.id}`);
-      } else {
-        toast.error('Order was created but no ID was returned');
-        navigate('/thank-you');
-      }
+      // Clear cart first to prevent redirect to shop in useEffect
+      dispatch(clearCart());
+      
+      // Show success message
+      toast.success('Order placed successfully!');
+      
+      // Navigate after a small delay to ensure state changes have processed
+      setTimeout(() => {
+        if (createdOrder && createdOrder.id) {
+          navigate(`/order-success/${createdOrder.id}`, { replace: true });
+        } else {
+          navigate('/thank-you', { replace: true });
+        }
+      }, 500);
+      
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error('Failed to place order. Please try again.');
@@ -362,91 +434,136 @@ const Checkout = () => {
         className="bg-white rounded-lg shadow-md p-6"
       >
         <h2 className="text-xl font-semibold mb-6 text-gray-800">Payment Method</h2>
-        <div className="space-y-4">
-          <div className={`border rounded-md p-4 transition-colors ${formData.paymentMethod === 'cod' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}`}>
-            <label className="flex items-center cursor-pointer">
+        
+        <div className="mb-6">
+          <div className="space-y-4">
+            <label className="flex items-center space-x-3 p-4 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
                 name="paymentMethod"
                 value="cod"
                 checked={formData.paymentMethod === 'cod'}
                 onChange={handleChange}
-                className="h-5 w-5 text-blue-600"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
               />
-              <div className="ml-3 flex items-center">
-                <Truck size={24} className="text-blue-600 mr-2" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Cash on Delivery (COD)</p>
-                  <p className="text-xs text-gray-500">Pay with cash when your order is delivered</p>
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg">🚚</span>
+                  <span className="font-medium text-gray-900">Cash on Delivery</span>
                 </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Pay when you receive your order
+                </p>
               </div>
             </label>
-          </div>
-          
-          <div className={`border rounded-md p-4 transition-colors ${formData.paymentMethod === 'card' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}`}>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="card"
-                checked={formData.paymentMethod === 'card'}
-                onChange={handleChange}
-                className="h-5 w-5 text-blue-600"
-              />
-              <div className="ml-3 flex items-center">
-                <CreditCard size={24} className="text-blue-600 mr-2" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Credit/Debit Card</p>
-                  <p className="text-xs text-gray-500">Pay securely with your card</p>
+            
+            <div>
+              <label className="flex items-center space-x-3 p-4 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="card"
+                  checked={formData.paymentMethod === 'card'}
+                  onChange={handleChange}
+                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <CreditCard size={20} className="text-blue-600" />
+                    <span className="font-medium text-gray-900">Credit/Debit Card</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Pay securely with your card
+                  </p>
                 </div>
-              </div>
-            </label>
+              </label>
+              
+              {formData.paymentMethod === 'card' && (
+                <div className="mt-4 p-4 border rounded-md bg-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label htmlFor="cardName" className="block text-sm font-medium text-gray-700 mb-1">
+                        Cardholder Name
+                      </label>
+                      <input
+                        type="text"
+                        id="cardName"
+                        name="cardName"
+                        value={cardData.cardName}
+                        onChange={handleCardChange}
+                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.cardName ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="Name on card"
+                      />
+                      {errors.cardName && <p className="mt-1 text-sm text-red-500">{errors.cardName}</p>}
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                        Card Number
+                      </label>
+                      <input
+                        type="text"
+                        id="cardNumber"
+                        name="cardNumber"
+                        value={cardData.cardNumber}
+                        onChange={handleCardChange}
+                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.cardNumber ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="4444 5555 6666 7777"
+                      />
+                      {errors.cardNumber && <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="cardExpiry" className="block text-sm font-medium text-gray-700 mb-1">
+                        Expiry Date (MM/YY)
+                      </label>
+                      <input
+                        type="text"
+                        id="cardExpiry"
+                        name="cardExpiry"
+                        value={cardData.cardExpiry}
+                        onChange={handleCardChange}
+                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.cardExpiry ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="MM/YY"
+                      />
+                      {errors.cardExpiry && <p className="mt-1 text-sm text-red-500">{errors.cardExpiry}</p>}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="cardCvv" className="block text-sm font-medium text-gray-700 mb-1">
+                        CVV
+                      </label>
+                      <input
+                        type="text"
+                        id="cardCvv"
+                        name="cardCvv"
+                        value={cardData.cardCvv}
+                        onChange={handleCardChange}
+                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.cardCvv ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="CVC/CVV"
+                      />
+                      {errors.cardCvv && <p className="mt-1 text-sm text-red-500">{errors.cardCvv}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
-        <div className="mt-8">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Order Summary</h3>
-          <div className="bg-gray-50 p-4 rounded-md">
-            <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center p-2 hover:bg-gray-100 rounded-md transition-colors">
-                  <div className="flex items-center">
-                    <img
-                      src={item.imageUrl || placeholderImage}
-                      alt={item.name}
-                      className="h-12 w-12 rounded-md object-cover mr-3 border border-gray-200"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = errorImage;
-                      }}
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{item.name}</p>
-                      <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-gray-800">
-                    PKR {(item.price * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-gray-600">Subtotal</span>
-                <span className="text-sm font-medium">PKR {totalAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-gray-600">Shipping</span>
-                <span className="text-sm font-medium">Free</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-gray-200">
-                <span>Total</span>
-                <span>PKR {totalAmount.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
+        <div className="mt-6">
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            Order Notes (Optional)
+          </label>
+          <textarea
+            id="notes"
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            rows="3"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Any special instructions for delivery"
+          ></textarea>
         </div>
         
         <div className="mt-8 flex justify-between">
@@ -458,23 +575,26 @@ const Checkout = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
-            Previous
+            Back
           </button>
+          
           <button
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
-                <Loader size={20} className="animate-spin mr-2" />
+                <Loader size={18} className="animate-spin mr-2" />
                 Processing...
               </>
             ) : (
               <>
-                <ShoppingBag size={20} className="mr-2" />
                 Place Order
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L13.586 11H3a1 1 0 110-2h10.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
               </>
             )}
           </button>

@@ -19,6 +19,7 @@ import AdminProducts from './pages/admin/Products';
 import AdminOrders from './pages/admin/Orders';
 import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
+import UserOrders from './pages/UserOrders';
 import { Loader } from 'lucide-react';
 import { useState, useEffect, createContext } from 'react';
 import OrderSuccess from './pages/OrderSuccess';
@@ -70,6 +71,7 @@ function AppContent() {
               <Route element={<PrivateRoute />}>
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/user/orders" element={<UserOrders />} />
               </Route>
               
               <Route element={<AdminRoute />}>

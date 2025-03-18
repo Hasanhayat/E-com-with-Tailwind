@@ -2,6 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
+const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-size='12' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' fill='%23999999'%3EImage%3C/text%3E%3C/svg%3E";
+const errorImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f8d7da'/%3E%3Ctext x='50%25' y='50%25' font-size='8' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' fill='%23721c24'%3EError%3C/text%3E%3C/svg%3E";
+
 const OrderDetail = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -124,19 +127,22 @@ const OrderDetail = ({ order, onClose }) => {
                     <tr key={index}>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
+                          <div className="h-16 w-16 flex-shrink-0">
                             <img
-                              className="h-10 w-10 rounded-md object-cover"
-                              src={item.imageUrl || 'https://via.placeholder.com/100?text=No+Image'}
+                              className="h-16 w-16 rounded-md object-cover"
+                              src={item.imageUrl || placeholderImage}
                               alt={item.name}
                               onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = 'https://via.placeholder.com/100?text=Error';
+                                e.target.src = errorImage;
                               }}
                             />
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                          <div className="ml-4 flex-1">
+                            <div className="font-medium text-gray-900">{item.name}</div>
+                            <div className="text-sm text-gray-500">
+                              Quantity: {item.quantity} × ₹{item.price.toFixed(2)}
+                            </div>
                           </div>
                         </div>
                       </td>

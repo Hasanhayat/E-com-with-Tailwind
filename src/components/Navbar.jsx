@@ -98,6 +98,14 @@ export default function Navbar() {
                 {/* Dropdown menu */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                    <Link
+                      to="/user/orders"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      My Orders
+                    </Link>
                     {user.role === 'admin' && (
                       <Link
                         to="/admin"
@@ -205,6 +213,14 @@ export default function Navbar() {
             
             {user && (
               <div className="mt-3 space-y-1">
+                <Link
+                  to="/user/orders"
+                  className="flex items-center px-4 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  My Orders
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();
