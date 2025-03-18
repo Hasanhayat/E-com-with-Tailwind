@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
-import { storeInfo } from '../config/storeConfig';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Footer() {
+  const { store, themeColors } = useTheme();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -27,10 +28,10 @@ export default function Footer() {
   };
 
   const socialLinks = [
-    { name: 'Facebook', icon: Facebook, href: storeInfo.social.facebook },
-    { name: 'Instagram', icon: Instagram, href: storeInfo.social.instagram },
-    { name: 'Twitter', icon: Twitter, href: storeInfo.social.twitter },
-    { name: 'YouTube', icon: Youtube, href: storeInfo.social.youtube },
+    { name: 'Facebook', icon: Facebook, href: store.social.facebook },
+    { name: 'Instagram', icon: Instagram, href: store.social.instagram },
+    { name: 'Twitter', icon: Twitter, href: store.social.twitter },
+    { name: 'YouTube', icon: Youtube, href: store.social.youtube },
   ];
 
   const handleNewsletterSubmit = (e) => {
@@ -40,7 +41,13 @@ export default function Footer() {
   };
 
   return (
-    <footer className='bg-gray-800 text-white py-8'>
+    <footer 
+      className='py-8'
+      style={{ 
+        backgroundColor: themeColors.secondaryColor,
+        color: 'white'
+      }}
+    >
       <div className='container mx-auto px-4'>
         <div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
           <div>
@@ -77,25 +84,25 @@ export default function Footer() {
             <h3 className='text-lg font-bold mb-4'>Contact Us</h3>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <MapPin className="h-5 w-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300">{storeInfo.locations[0].address}</span>
+                <MapPin className="h-5 w-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" style={{ color: themeColors.primaryColor }} />
+                <span className="text-gray-300">{store.locations[0].address}</span>
               </li>
               <li className="flex items-center">
-                <Phone className="h-5 w-5 text-orange-500 mr-2 flex-shrink-0" />
+                <Phone className="h-5 w-5 text-orange-500 mr-2 flex-shrink-0" style={{ color: themeColors.primaryColor }} />
                 <a 
-                  href={`tel:${storeInfo.phone}`} 
+                  href={`tel:${store.phone}`} 
                   className="text-gray-300 hover:text-white hover:underline"
                 >
-                  {storeInfo.phone}
+                  {store.phone}
                 </a>
               </li>
               <li className="flex items-center">
-                <Mail className="h-5 w-5 text-orange-500 mr-2 flex-shrink-0" />
+                <Mail className="h-5 w-5 text-orange-500 mr-2 flex-shrink-0" style={{ color: themeColors.primaryColor }} />
                 <a 
-                  href={`mailto:${storeInfo.email}`} 
+                  href={`mailto:${store.email}`} 
                   className="text-gray-300 hover:text-white hover:underline"
                 >
-                  {storeInfo.email}
+                  {store.email}
                 </a>
               </li>
             </ul>
@@ -115,7 +122,8 @@ export default function Footer() {
                 />
                 <button 
                   type='submit' 
-                  className='bg-orange-600 p-2 px-4 rounded-r-md hover:bg-orange-700 transition-colors'
+                  className='p-2 px-4 rounded-r-md hover:bg-opacity-90 transition-colors'
+                  style={{ backgroundColor: themeColors.primaryColor, color: 'white' }}
                 >
                   Subscribe
                 </button>
@@ -142,9 +150,9 @@ export default function Footer() {
         </div>
 
         <div className='mt-8 text-center text-gray-400 text-sm'>
-          <p>&copy; {currentYear} {storeInfo.name}. All rights reserved.</p>
+          <p>&copy; {currentYear} {store.name}. All rights reserved.</p>
           <p className="mt-1">
-            Established {storeInfo.established} | {storeInfo.tagline}
+            Established {store.established} | {store.tagline}
           </p>
         </div>
       </div>

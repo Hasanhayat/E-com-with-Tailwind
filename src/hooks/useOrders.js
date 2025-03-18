@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, updateDoc, doc, addDoc, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import toast from 'react-hot-toast';
-import { useAuth } from './useAuth';
+import { useAuth } from '../context/AuthContext';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
@@ -20,143 +20,123 @@ export function useOrders() {
   ];
 
   useEffect(() => {
-    const unsubscribe = subscribeToOrders();
-    return () => unsubscribe();
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        // Here you would typically make an API call to your backend
+        // For now, we'll use mock data
+        const mockOrders = [
+          {
+            id: '1',
+            customerName: 'John Doe',
+            items: [
+              {
+                id: '1',
+                name: 'Product 1',
+                price: 100,
+                quantity: 2
+              }
+            ],
+            totalAmount: 200,
+            status: 'completed',
+            createdAt: '2024-01-01'
+          },
+          {
+            id: '2',
+            customerName: 'Jane Smith',
+            items: [
+              {
+                id: '2',
+                name: 'Product 2',
+                price: 150,
+                quantity: 1
+              }
+            ],
+            totalAmount: 150,
+            status: 'pending',
+            createdAt: '2024-01-15'
+          },
+          {
+            id: '3',
+            customerName: 'Mike Johnson',
+            items: [
+              {
+                id: '3',
+                name: 'Product 3',
+                price: 200,
+                quantity: 3
+              }
+            ],
+            totalAmount: 600,
+            status: 'processing',
+            createdAt: '2024-02-01'
+          }
+        ];
+
+        setOrders(mockOrders);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.role === 'admin') {
+      fetchOrders();
+    }
   }, [user]);
 
-  const subscribeToOrders = () => {
-    setIsLoading(true);
+  const addOrder = async (orderData) => {
     try {
-      const ordersCollection = collection(db, 'orders');
-      const ordersQuery = query(ordersCollection, orderBy('createdAt', 'desc'));
-      
-      const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-        if (snapshot.empty) {
-          console.log('No orders found');
-          setOrders([]);
-        } else {
-          const ordersData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setOrders(ordersData);
-        }
-        setIsLoading(false);
-      }, (err) => {
-        console.error('Error subscribing to orders:', err);
-        setError(err.message);
-        setIsLoading(false);
-        toast.error('Failed to load orders');
-      });
-      
-      return unsubscribe;
-    } catch (err) {
-      console.error('Error setting up orders subscription:', err);
-      setError(err.message);
-      setIsLoading(false);
-      return () => {};
-    }
-  };
-
-  const fetchOrders = async () => {
-    try {
-      setIsLoading(true);
-      const ordersCollection = collection(db, 'orders');
-      const ordersQuery = query(ordersCollection, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(ordersQuery);
-      
-      if (snapshot.empty) {
-        console.log('No orders found');
-        setOrders([]);
-      } else {
-        const ordersData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setOrders(ordersData);
-      }
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching orders:', err);
-      toast.error('Failed to fetch orders');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      if (!orderId) {
-        throw new Error('Order ID is required');
-      }
-      
-      const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, { 
-        status: newStatus,
-        updatedAt: new Date().toISOString()
-      });
-      
-      // Update local state
-      setOrders(orders.map(order => 
-        order.id === orderId ? { 
-          ...order, 
-          status: newStatus,
-          updatedAt: new Date().toISOString()
-        } : order
-      ));
-      
-      return true;
-    } catch (err) {
-      console.error('Error updating order status:', err);
-      throw err;
-    }
-  };
-
-  const createOrder = async (orderData) => {
-    try {
-      if (!orderData) {
-        throw new Error('Order data is required');
-      }
-      
-      // Ensure required fields
+      // Here you would typically make an API call to your backend
+      // For now, we'll simulate adding an order
       const newOrder = {
+        id: String(orders.length + 1),
         ...orderData,
-        status: orderData.status || 'pending',
-        createdAt: orderData.createdAt || new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
-      
-      console.log('Creating new order:', newOrder);
-      
-      const docRef = await addDoc(collection(db, 'orders'), newOrder);
-      
-      const createdOrder = {
-        id: docRef.id,
-        ...newOrder
-      };
-      
-      console.log('Order created successfully:', createdOrder);
-      
-      // Update local state
-      setOrders(prevOrders => [createdOrder, ...prevOrders]);
-      
-      return createdOrder;
+
+      setOrders(prev => [...prev, newOrder]);
+      return newOrder;
     } catch (err) {
-      console.error('Error creating order:', err);
+      setError(err.message);
       throw err;
     }
   };
 
-  const refreshOrders = () => {
-    return fetchOrders();
+  const updateOrderStatus = async (id, status) => {
+    try {
+      // Here you would typically make an API call to your backend
+      // For now, we'll simulate updating an order
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === id
+            ? { ...order, status }
+            : order
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const getOrderById = (id) => {
+    return orders.find(order => order.id === id);
+  };
+
+  const getOrdersByStatus = (status) => {
+    return orders.filter(order => order.status === status);
   };
 
   return {
     orders,
     isLoading,
     error,
+    addOrder,
     updateOrderStatus,
-    createOrder,
-    refreshOrders,
+    getOrderById,
+    getOrdersByStatus,
     orderStatuses
   };
 } 

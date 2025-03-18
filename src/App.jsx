@@ -30,6 +30,9 @@ import Terms from './pages/Terms';
 import FAQs from './pages/FAQs';
 import Shipping from './pages/Shipping';
 import Returns from './pages/Returns';
+import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
+import { LoadingProvider } from './context/LoadingContext';
 
 // Create a loading context
 export const LoadingContext = createContext({
@@ -55,80 +58,84 @@ function AppContent() {
   
   return (
     <LoadingContext.Provider value={{ isLoading: loading, setIsLoading: setLoading }}>
-      <Router>
-        <ScrollToTop />
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-          <Navbar />
-          {loading && (
-            <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
-              <div className="flex flex-col items-center">
-                <Loader className="animate-spin text-orange-600 mb-4" size={48} />
-                <p className="text-gray-700 font-medium">Loading...</p>
-              </div>
-            </div>
-          )}
-          <main className="container mx-auto px-4 py-8 flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/product/:id" element={<ProductDetails />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              
-              <Route element={<PrivateRoute />}>
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/user/orders" element={<UserOrders />} />
-              </Route>
-              
-              <Route element={<AdminRoute />}>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/orders" element={<AdminOrders />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-              </Route>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
+            <ScrollToTop />
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+              <Navbar />
+              {loading && (
+                <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
+                  <div className="flex flex-col items-center">
+                    <Loader className="animate-spin text-orange-600 mb-4" size={48} />
+                    <p className="text-gray-700 font-medium">Loading...</p>
+                  </div>
+                </div>
+              )}
+              <main className="container mx-auto px-4 py-8 flex-grow">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/product/:id" element={<ProductDetails />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  
+                  <Route element={<PrivateRoute />}>
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/user/orders" element={<UserOrders />} />
+                  </Route>
+                  
+                  <Route element={<AdminRoute />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/products" element={<AdminProducts />} />
+                    <Route path="/admin/orders" element={<AdminOrders />} />
+                    <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/settings" element={<AdminSettings />} />
+                  </Route>
 
-              <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-              <Route path="/thank-you" element={<OrderSuccess />} />
-              
-              {/* Information Pages */}
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/faqs" element={<FAQs />} />
-              <Route path="/shipping" element={<Shipping />} />
-              <Route path="/returns" element={<Returns />} />
-            </Routes>
-          </main>
-          <Footer />
-          <Toaster 
-            position="bottom-right" 
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#FFFFFF',
-                },
-              },
-              error: {
-                duration: 4000,
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#FFFFFF',
-                },
-              },
-            }}
-          />
-        </div>
-      </Router>
+                  <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+                  <Route path="/thank-you" element={<OrderSuccess />} />
+                  
+                  {/* Information Pages */}
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/faqs" element={<FAQs />} />
+                  <Route path="/shipping" element={<Shipping />} />
+                  <Route path="/returns" element={<Returns />} />
+                </Routes>
+              </main>
+              <Footer />
+              <Toaster 
+                position="bottom-right" 
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
+                  },
+                  success: {
+                    duration: 3000,
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#FFFFFF',
+                    },
+                  },
+                  error: {
+                    duration: 4000,
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#FFFFFF',
+                    },
+                  },
+                }}
+              />
+            </div>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
     </LoadingContext.Provider>
   );
 }
@@ -137,7 +144,13 @@ function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <AppContent />
+        <LoadingProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <AppContent />
+            </ThemeProvider>
+          </AuthProvider>
+        </LoadingProvider>
       </QueryClientProvider>
     </Provider>
   );
