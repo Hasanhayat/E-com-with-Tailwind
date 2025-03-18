@@ -23,6 +23,13 @@ import UserOrders from './pages/UserOrders';
 import { Loader } from 'lucide-react';
 import { useState, useEffect, createContext } from 'react';
 import OrderSuccess from './pages/OrderSuccess';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import FAQs from './pages/FAQs';
+import Shipping from './pages/Shipping';
+import Returns from './pages/Returns';
 
 // Create a loading context
 export const LoadingContext = createContext({
@@ -84,6 +91,15 @@ function AppContent() {
 
               <Route path="/order-success/:orderId" element={<OrderSuccess />} />
               <Route path="/thank-you" element={<OrderSuccess />} />
+              
+              {/* Information Pages */}
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/faqs" element={<FAQs />} />
+              <Route path="/shipping" element={<Shipping />} />
+              <Route path="/returns" element={<Returns />} />
             </Routes>
           </main>
           <Footer />
