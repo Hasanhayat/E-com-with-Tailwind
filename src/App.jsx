@@ -55,7 +55,7 @@ function ScrollToTop() {
 
 function AppContent() {
   const [loading, setLoading] = useState(false);
-  
+
   return (
     <LoadingContext.Provider value={{ isLoading: loading, setIsLoading: setLoading }}>
       <ThemeProvider>
@@ -69,8 +69,8 @@ function AppContent() {
                   <div className="flex flex-col items-center">
                     <Loader className="animate-spin text-orange-600 mb-4" size={48} />
                     <p className="text-gray-700 font-medium">Loading...</p>
-                  </div>
-                </div>
+        </div>
+      </div>
               )}
               <main className="container mx-auto px-4 py-8 flex-grow">
                 <Routes>
@@ -132,7 +132,7 @@ function AppContent() {
                   },
                 }}
               />
-            </div>
+    </div>
           </Router>
         </AuthProvider>
       </ThemeProvider>

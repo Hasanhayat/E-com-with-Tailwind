@@ -5,8 +5,17 @@ import { useProducts } from './useProducts';
 import { useCustomers } from './useCustomers';
 
 export function useAnalytics() {
-  const [analytics, setAnalytics] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [analytics, setAnalytics] = useState({
+    totalSales: 0,
+    salesChange: 0,
+    ordersChange: 0,
+    productsChange: 0,
+    customersChange: 0,
+    topSellingProducts: [],
+    salesByCategory: [],
+    recentSales: []
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const { orders } = useOrders();
@@ -14,75 +23,58 @@ export function useAnalytics() {
   const { customers } = useCustomers();
 
   useEffect(() => {
-    const calculateAnalytics = async () => {
+    const fetchAnalytics = async () => {
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        setIsLoading(true);
-
-        // Calculate total sales
-        const totalSales = orders.reduce((total, order) => {
-          return total + (order.totalAmount || order.items?.reduce((itemTotal, item) => 
-            itemTotal + (item.price * item.quantity), 0) || 0);
-        }, 0);
-
-        // Calculate sales change (mock data for now)
-        const salesChange = 15; // 15% increase
-
-        // Calculate orders change (mock data for now)
-        const ordersChange = 8; // 8% increase
-
-        // Calculate products change (mock data for now)
-        const productsChange = 5; // 5% increase
-
-        // Calculate customers change (mock data for now)
-        const customersChange = 12; // 12% increase
-
-        // Get top selling products
-        const topSellingProducts = products
-          .sort((a, b) => (b.sold || 0) - (a.sold || 0))
-          .slice(0, 5);
-
-        // Get recent sales data
-        const recentSales = orders
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 7)
-          .map(order => ({
-            date: new Date(order.createdAt).toLocaleDateString(),
-            amount: order.totalAmount || order.items?.reduce((total, item) => 
-              total + (item.price * item.quantity), 0) || 0
-          }));
-
-        // Get sales by category
-        const salesByCategory = products.reduce((acc, product) => {
-          const category = product.category || 'Uncategorized';
-          acc[category] = (acc[category] || 0) + (product.sold || 0);
-          return acc;
-        }, {});
-
-        setAnalytics({
-          totalSales,
-          salesChange,
-          ordersChange,
-          productsChange,
-          customersChange,
-          topSellingProducts,
-          recentSales,
-          salesByCategory
-        });
+        // Simulate API call with mock data
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Sample analytics data
+        const mockAnalytics = {
+          totalSales: 24580,
+          salesChange: 12.5,
+          ordersChange: 8.2,
+          productsChange: 4.3,
+          customersChange: 10.7,
+          topSellingProducts: [
+            { id: 1, name: 'Classic T-Shirt', sales: 120, revenue: 2980 },
+            { id: 2, name: 'Denim Jeans', sales: 98, revenue: 4900 },
+            { id: 3, name: 'Leather Jacket', sales: 45, revenue: 8100 },
+            { id: 4, name: 'Summer Dress', sales: 78, revenue: 3120 },
+            { id: 5, name: 'Running Shoes', sales: 65, revenue: 5200 }
+          ],
+          salesByCategory: [
+            { category: 'Men', sales: 8450 },
+            { category: 'Women', sales: 10200 },
+            { category: 'Kids', sales: 3650 },
+            { category: 'Accessories', sales: 2280 }
+          ],
+          recentSales: [
+            { id: 1, date: '2023-04-01', amount: 125 },
+            { id: 2, date: '2023-04-02', amount: 348 },
+            { id: 3, date: '2023-04-03', amount: 256 },
+            { id: 4, date: '2023-04-04', amount: 175 },
+            { id: 5, date: '2023-04-05', amount: 452 },
+            { id: 6, date: '2023-04-06', amount: 278 },
+            { id: 7, date: '2023-04-07', amount: 189 }
+          ]
+        };
+        
+        setAnalytics(mockAnalytics);
       } catch (err) {
-        setError(err.message);
+        console.error('Error fetching analytics:', err);
+        setError('Failed to fetch analytics data.');
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     if (user?.role === 'admin') {
-      calculateAnalytics();
+      fetchAnalytics();
     }
   }, [user, orders, products, customers]);
-
-  return {
-    analytics,
-    isLoading,
-    error
-  };
+  
+  return { analytics, isLoading, error };
 } 

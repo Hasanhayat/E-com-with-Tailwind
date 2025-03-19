@@ -4,45 +4,61 @@ import { useOrders } from '../../hooks/useOrders';
 import { Loader, Search, Filter, ChevronDown } from 'lucide-react';
 import OrderDetail from '../../components/OrderDetail';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
+import { 
+  ChevronLeft,
+  ArrowUp,
+  ArrowDown,
+  CheckCircle,
+  Clock,
+  Truck,
+  ShoppingBag,
+  X
+} from 'lucide-react';
 
 const Orders = () => {
+  const navigate = useNavigate();
+  const { themeColors } = useTheme();
   const { orders, isLoading, updateOrderStatus, refreshOrders, orderStatuses } = useOrders();
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState({});
+  const [sortField, setSortField] = useState('date');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    let result = [...orders];
-
-    // Apply search filter
-    if (searchTerm) {
-      const lowercasedSearch = searchTerm.toLowerCase();
-      result = result.filter(order => 
-        order.id.toLowerCase().includes(lowercasedSearch) ||
-        order.shippingInfo?.name?.toLowerCase().includes(lowercasedSearch) ||
-        order.shippingInfo?.email?.toLowerCase().includes(lowercasedSearch)
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(order => order.status === statusFilter);
-    }
-
-    setFilteredOrders(result);
-  }, [orders, searchTerm, statusFilter]);
+  const statusOptions = [
+    { value: 'all', label: 'All Orders', icon: ShoppingBag },
+    { value: 'pending', label: 'Pending', icon: Clock },
+    { value: 'processing', label: 'Processing', icon: Clock },
+    { value: 'shipped', label: 'Shipped', icon: Truck },
+    { value: 'completed', label: 'Completed', icon: CheckCircle },
+    { value: 'cancelled', label: 'Cancelled', icon: X }
+  ];
+  
+  const statusColors = {
+    pending: '#f59e0b',    // Amber
+    processing: '#3b82f6',  // Blue
+    shipped: '#8b5cf6',    // Purple
+    completed: '#10b981',  // Green
+    cancelled: '#ef4444'   // Red
+  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       setUpdatingOrderId(orderId);
       await updateOrderStatus(orderId, newStatus);
+      setShowStatusDropdown(prev => ({
+        ...prev,
+        [orderId]: false
+      }));
       toast.success(`Order status updated to ${newStatus}`);
-      setShowStatusDropdown({});
     } catch (error) {
-      toast.error(`Failed to update status: ${error.message}`);
+      toast.error('Failed to update order status');
+      console.error(error);
     } finally {
       setUpdatingOrderId(null);
     }
@@ -71,176 +87,341 @@ const Orders = () => {
   };
 
   const handleRefresh = () => {
-    toast.promise(
-      refreshOrders(),
-      {
-        loading: 'Refreshing orders...',
-        success: 'Orders refreshed successfully',
-        error: 'Failed to refresh orders',
-      }
-    );
+    refreshOrders();
+    toast.success('Orders refreshed successfully');
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Orders</h1>
-        <button 
-          onClick={handleRefresh}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Refresh Orders
-        </button>
-      </div>
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <div className="relative flex-grow">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-gray-400" />
+  const filteredOrders = orders
+    .filter(order => {
+      // Apply status filter
+      if (statusFilter !== 'all' && order.status !== statusFilter) {
+        return false;
+      }
+      
+      // Apply search term
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          (order.id && order.id.toString().includes(searchLower)) ||
+          (order.shippingInfo?.name && order.shippingInfo?.name.toLowerCase().includes(searchLower)) ||
+          (order.shippingInfo?.email && order.shippingInfo?.email.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      // Apply sorting
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'date':
+          aValue = new Date(a.createdAt || 0);
+          bValue = new Date(b.createdAt || 0);
+          break;
+        case 'customer':
+          aValue = a.shippingInfo?.name || '';
+          bValue = b.shippingInfo?.name || '';
+          break;
+        case 'total':
+          aValue = a.items?.reduce((total, item) => total + (item.price * item.quantity), 0) || 0;
+          bValue = b.items?.reduce((total, item) => total + (item.price * item.quantity), 0) || 0;
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        default:
+          return 0;
+      }
+      
+      // Handle string vs number vs date comparison
+      let comparison;
+      if (aValue instanceof Date && bValue instanceof Date) {
+        comparison = aValue - bValue;
+      } else {
+        comparison = typeof aValue === 'string'
+          ? aValue.localeCompare(bValue)
+          : aValue - bValue;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center">
+          <button 
+            onClick={() => navigate('/admin/dashboard')}
+            className="mr-4 p-2 rounded-full hover:bg-gray-100"
+            style={{ color: themeColors.textSecondaryColor }}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
+            Manage Orders
+          </h1>
+        </div>
+      </div>
+      
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={18} style={{ color: themeColors.textSecondaryColor }} />
+            </div>
+            <input
+              type="text"
+              placeholder="Search orders by ID, name, or email"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2"
+              style={{ 
+                borderColor: 'rgba(0,0,0,0.1)', 
+                backgroundColor: themeColors.cardColor,
+                color: themeColors.textPrimaryColor,
+                focusRingColor: themeColors.primaryColor
+              }}
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search by order ID, customer name or email"
-            className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2 rounded border"
+            style={{ 
+              borderColor: 'rgba(0,0,0,0.1)', 
+              backgroundColor: showFilters ? themeColors.primaryColor : themeColors.cardColor,
+              color: showFilters ? '#ffffff' : themeColors.textPrimaryColor
+            }}
+          >
+            <Filter size={18} />
+            <span>Filters</span>
+          </button>
         </div>
         
-        <div className="relative w-full md:w-64">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Filter size={18} className="text-gray-400" />
-          </div>
-          <select
-            className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+        {showFilters && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-4 border rounded-md mb-4"
+            style={{ 
+              borderColor: 'rgba(0,0,0,0.1)', 
+              backgroundColor: themeColors.cardColor
+            }}
           >
-            <option value="all">All Statuses</option>
-            {orderStatuses.map(status => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <ChevronDown size={18} className="text-gray-400" />
-          </div>
-        </div>
+            <div className="flex flex-wrap gap-4">
+              <div>
+                <label 
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: themeColors.textPrimaryColor }}
+                >
+                  Order Status
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {statusOptions.map((status) => {
+                    const isActive = statusFilter === status.value;
+                    const StatusIcon = status.icon;
+                    
+                    return (
+                      <button
+                        key={status.value}
+                        onClick={() => setStatusFilter(status.value)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm ${
+                          isActive ? 'text-white' : ''
+                        }`}
+                        style={{ 
+                          backgroundColor: isActive 
+                            ? (status.value === 'all' ? themeColors.primaryColor : statusColors[status.value] || themeColors.primaryColor) 
+                            : 'rgba(0,0,0,0.05)',
+                          color: isActive ? '#ffffff' : themeColors.textPrimaryColor
+                        }}
+                      >
+                        <StatusIcon size={16} />
+                        <span>{status.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
-
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader size={40} className="animate-spin text-blue-600" />
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <p className="text-gray-500">No orders found</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+      
+      <div className="overflow-x-auto">
+        <div className="inline-block min-w-full align-middle">
+          <div 
+            className="overflow-hidden shadow rounded-lg"
+            style={{ backgroundColor: themeColors.cardColor }}
+          >
+            <table className="min-w-full divide-y"  style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+              <thead style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order ID
+                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold">
+                    <button 
+                      className="group inline-flex items-center"
+                      onClick={() => handleSort('date')}
+                      style={{ color: themeColors.textPrimaryColor }}
+                    >
+                      Date
+                      <span className="ml-2 flex-none rounded">
+                        {sortField === 'date' ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp size={16} style={{ color: themeColors.primaryColor }} />
+                          ) : (
+                            <ArrowDown size={16} style={{ color: themeColors.primaryColor }} />
+                          )
+                        ) : null}
+                      </span>
+                    </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold">
+                    <button 
+                      className="group inline-flex items-center"
+                      onClick={() => handleSort('customer')}
+                      style={{ color: themeColors.textPrimaryColor }}
+                    >
+                      Customer
+                      <span className="ml-2 flex-none rounded">
+                        {sortField === 'customer' ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp size={16} style={{ color: themeColors.primaryColor }} />
+                          ) : (
+                            <ArrowDown size={16} style={{ color: themeColors.primaryColor }} />
+                          )
+                        ) : null}
+                      </span>
+                    </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold">
+                    <button 
+                      className="group inline-flex items-center"
+                      onClick={() => handleSort('total')}
+                      style={{ color: themeColors.textPrimaryColor }}
+                    >
+                      Total
+                      <span className="ml-2 flex-none rounded">
+                        {sortField === 'total' ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp size={16} style={{ color: themeColors.primaryColor }} />
+                          ) : (
+                            <ArrowDown size={16} style={{ color: themeColors.primaryColor }} />
+                          )
+                        ) : null}
+                      </span>
+                    </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold">
+                    <button 
+                      className="group inline-flex items-center"
+                      onClick={() => handleSort('status')}
+                      style={{ color: themeColors.textPrimaryColor }}
+                    >
+                      Status
+                      <span className="ml-2 flex-none rounded">
+                        {sortField === 'status' ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp size={16} style={{ color: themeColors.primaryColor }} />
+                          ) : (
+                            <ArrowDown size={16} style={{ color: themeColors.primaryColor }} />
+                          )
+                        ) : null}
+                      </span>
+                    </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold">
+                    <span style={{ color: themeColors.textPrimaryColor }}>Actions</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        #{order.id.slice(-6)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.shippingInfo?.name || 'N/A'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {order.shippingInfo?.email || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {formatDate(order.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                        {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ₹{order.items?.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2) || '0.00'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          View
-                        </button>
-                        <div className="relative">
-                          <button
-                            onClick={() => toggleStatusDropdown(order.id)}
-                            className="text-gray-600 hover:text-gray-900 flex items-center"
-                            disabled={updatingOrderId === order.id}
-                          >
-                            {updatingOrderId === order.id ? (
-                              <Loader size={16} className="animate-spin mr-1" />
-                            ) : (
-                              <>
-                                Update Status
-                                <ChevronDown size={16} className="ml-1" />
-                              </>
-                            )}
-                          </button>
-                          {showStatusDropdown[order.id] && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1">
-                              {orderStatuses.map((status) => (
-                                <button
-                                  key={status.value}
-                                  onClick={() => handleStatusChange(order.id, status.value)}
-                                  className={`block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left ${
-                                    order.status === status.value ? 'bg-gray-100' : ''
-                                  }`}
-                                  disabled={order.status === status.value}
-                                >
-                                  {status.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              <tbody className="divide-y" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td 
+                      colSpan={5} 
+                      className="px-3 py-4 text-sm text-center"
+                      style={{ color: themeColors.textSecondaryColor }}
+                    >
+                      No orders found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredOrders.map((order, index) => (
+                    <motion.tr 
+                      key={order.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedOrder(order)}
+                      style={{ color: themeColors.textPrimaryColor }}
+                    >
+                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
+                        <div className="font-medium">#{order.id}</div>
+                        <div style={{ color: themeColors.textSecondaryColor }}>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <div className="font-medium">{order.shippingInfo?.name || 'N/A'}</div>
+                        <div style={{ color: themeColors.textSecondaryColor }}>{order.shippingInfo?.email || 'N/A'}</div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm font-medium">
+                        ${(order.items?.reduce((total, item) => total + (item.price * item.quantity), 0) || 0).toFixed(2)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <span 
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                          style={{
+                            backgroundColor: `${statusColors[order.status]}20`,
+                            color: statusColors[order.status]
+                          }}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <select
+                          value={order.status}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(order.id, e.target.value);
+                          }}
+                          className="block w-full py-1.5 pl-3 pr-10 text-sm rounded border focus:outline-none focus:ring-2"
+                          style={{ 
+                            borderColor: 'rgba(0,0,0,0.1)', 
+                            backgroundColor: themeColors.cardColor,
+                            color: themeColors.textPrimaryColor,
+                            focusRingColor: themeColors.primaryColor
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {Object.keys(statusColors).map((status) => (
+                            <option key={status} value={status}>
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
-      )}
+      </div>
 
       {selectedOrder && (
         <OrderDetail

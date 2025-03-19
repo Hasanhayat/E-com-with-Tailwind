@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
@@ -21,122 +21,223 @@ export function useOrders() {
 
   useEffect(() => {
     const fetchOrders = async () => {
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        setIsLoading(true);
-        // Here you would typically make an API call to your backend
-        // For now, we'll use mock data
+        // Simulate API call with mock data
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        // Sample orders data
         const mockOrders = [
           {
-            id: '1',
+            id: 1,
             customerName: 'John Doe',
-            items: [
-              {
-                id: '1',
-                name: 'Product 1',
-                price: 100,
-                quantity: 2
-              }
-            ],
-            totalAmount: 200,
+            customerEmail: 'john.doe@example.com',
+            date: '2023-04-10',
             status: 'completed',
-            createdAt: '2024-01-01'
+            total: 125.99,
+            items: [
+              { id: 1, name: 'Classic T-Shirt', price: 29.99, quantity: 2 },
+              { id: 2, name: 'Denim Jeans', price: 59.99, quantity: 1 }
+            ],
+            shipping: {
+              address: '123 Main St, New York, NY',
+              method: 'Standard',
+              cost: 5.99
+            },
+            payment: {
+              method: 'Credit Card',
+              status: 'Paid'
+            }
           },
           {
-            id: '2',
+            id: 2,
             customerName: 'Jane Smith',
+            customerEmail: 'jane.smith@example.com',
+            date: '2023-04-11',
+            status: 'processing',
+            total: 89.99,
             items: [
-              {
-                id: '2',
-                name: 'Product 2',
-                price: 150,
-                quantity: 1
-              }
+              { id: 3, name: 'Summer Dress', price: 49.99, quantity: 1 },
+              { id: 4, name: 'Sandals', price: 34.99, quantity: 1 }
             ],
-            totalAmount: 150,
-            status: 'pending',
-            createdAt: '2024-01-15'
+            shipping: {
+              address: '456 Park Ave, Boston, MA',
+              method: 'Express',
+              cost: 9.99
+            },
+            payment: {
+              method: 'PayPal',
+              status: 'Paid'
+            }
           },
           {
-            id: '3',
-            customerName: 'Mike Johnson',
+            id: 3,
+            customerName: 'Robert Johnson',
+            customerEmail: 'robert.johnson@example.com',
+            date: '2023-04-12',
+            status: 'pending',
+            total: 199.99,
             items: [
-              {
-                id: '3',
-                name: 'Product 3',
-                price: 200,
-                quantity: 3
-              }
+              { id: 5, name: 'Leather Jacket', price: 199.99, quantity: 1 }
             ],
-            totalAmount: 600,
-            status: 'processing',
-            createdAt: '2024-02-01'
+            shipping: {
+              address: '789 Main St, Chicago, IL',
+              method: 'Standard',
+              cost: 5.99
+            },
+            payment: {
+              method: 'Credit Card',
+              status: 'Pending'
+            }
+          },
+          {
+            id: 4,
+            customerName: 'Sarah Williams',
+            customerEmail: 'sarah.williams@example.com',
+            date: '2023-04-12',
+            status: 'completed',
+            total: 65.98,
+            items: [
+              { id: 6, name: 'Running Shoes', price: 59.99, quantity: 1 }
+            ],
+            shipping: {
+              address: '101 Oak St, San Francisco, CA',
+              method: 'Standard',
+              cost: 5.99
+            },
+            payment: {
+              method: 'Debit Card',
+              status: 'Paid'
+            }
+          },
+          {
+            id: 5,
+            customerName: 'Michael Brown',
+            customerEmail: 'michael.brown@example.com',
+            date: '2023-04-13',
+            status: 'shipped',
+            total: 145.97,
+            items: [
+              { id: 7, name: 'Hoodie', price: 39.99, quantity: 1 },
+              { id: 8, name: 'Sweatpants', price: 29.99, quantity: 2 }
+            ],
+            shipping: {
+              address: '202 Pine St, Seattle, WA',
+              method: 'Express',
+              cost: 9.99
+            },
+            payment: {
+              method: 'Credit Card',
+              status: 'Paid'
+            }
           }
         ];
-
+        
         setOrders(mockOrders);
       } catch (err) {
-        setError(err.message);
+        console.error('Error fetching orders:', err);
+        setError('Failed to fetch orders data.');
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     if (user?.role === 'admin') {
       fetchOrders();
     }
   }, [user]);
-
-  const addOrder = async (orderData) => {
+  
+  // Add an order
+  const addOrder = async (order) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      // Here you would typically make an API call to your backend
-      // For now, we'll simulate adding an order
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const newOrder = {
-        id: String(orders.length + 1),
-        ...orderData,
-        createdAt: new Date().toISOString()
+        id: orders.length + 1,
+        ...order,
+        date: new Date().toISOString().split('T')[0],
+        status: 'pending'
       };
-
-      setOrders(prev => [...prev, newOrder]);
+      
+      setOrders([newOrder, ...orders]);
       return newOrder;
     } catch (err) {
-      setError(err.message);
+      setError('Failed to add order.');
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const updateOrderStatus = async (id, status) => {
+  
+  // Update an order
+  const updateOrder = async (id, updatedData) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      // Here you would typically make an API call to your backend
-      // For now, we'll simulate updating an order
-      setOrders(prev =>
-        prev.map(order =>
-          order.id === id
-            ? { ...order, status }
-            : order
-        )
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const updatedOrders = orders.map(order => 
+        order.id === id ? { ...order, ...updatedData } : order
       );
+      
+      setOrders(updatedOrders);
+      return updatedOrders.find(order => order.id === id);
     } catch (err) {
-      setError(err.message);
+      setError('Failed to update order.');
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
+  // Delete an order
+  const deleteOrder = async (id) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const updatedOrders = orders.filter(order => order.id !== id);
+      setOrders(updatedOrders);
+      return true;
+    } catch (err) {
+      setError('Failed to delete order.');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Get order by ID
   const getOrderById = (id) => {
     return orders.find(order => order.id === id);
   };
-
-  const getOrdersByStatus = (status) => {
+  
+  // Filter orders
+  const filterOrders = (status) => {
+    if (!status || status === 'all') return orders;
     return orders.filter(order => order.status === status);
   };
-
-  return {
-    orders,
-    isLoading,
-    error,
-    addOrder,
-    updateOrderStatus,
-    getOrderById,
-    getOrdersByStatus,
+  
+  return { 
+    orders, 
+    isLoading, 
+    error, 
+    addOrder, 
+    updateOrder, 
+    deleteOrder, 
+    getOrderById, 
+    filterOrders,
     orderStatuses
   };
 } 

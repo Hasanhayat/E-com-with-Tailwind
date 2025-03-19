@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -10,7 +9,6 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is logged in (e.g., check localStorage or session)
@@ -38,7 +36,7 @@ export function AuthProvider({ children }) {
 
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
-      navigate('/admin/dashboard');
+      window.location.href = '/admin/dashboard';
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -48,7 +46,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   const register = async (userData) => {
@@ -63,7 +61,7 @@ export function AuthProvider({ children }) {
 
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
