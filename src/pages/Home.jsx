@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useProducts } from '../hooks/useProducts';
@@ -11,8 +11,15 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Loader
+  Loader,
+  ShoppingCart,
+  Heart,
+  Search
 } from 'lucide-react';
+import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Local placeholder image instead of via.placeholder.com
 const placeholderImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
@@ -62,69 +69,78 @@ const categories = [
 
 export default function Home() {
   const { store, themeColors } = useTheme();
-  const { products, isLoading } = useProducts();
+  const { products, isLoading, getFeaturedProducts, getNewArrivals, getBestSellers } = useProducts();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
 
+  // Refs for GSAP animations
+  const heroRef = useRef(null);
+  const newArrivalsRef = useRef(null);
+  const bestSellersRef = useRef(null);
+  const featuresRef = useRef(null);
+
   useEffect(() => {
-    if (products && products.length > 0) {
-      // Get featured products and add high-quality images
-      const featured = products.filter(p => p.featured).slice(0, 4);
-      
-      // Ensure we have enough featured products with high-quality images
-      const enhancedFeatured = featured.map((product, index) => {
-        return {
-          ...product,
-          image: sampleImages[index % sampleImages.length].url,
-          name: featured.length >= 4 ? product.name : sampleImages[index % sampleImages.length].name,
-          description: product.description || sampleImages[index % sampleImages.length].description
-        };
-      });
-      
-      // If we don't have enough featured products, add sample ones
-      if (enhancedFeatured.length < 4) {
-        for (let i = enhancedFeatured.length; i < 4; i++) {
-          enhancedFeatured.push({
-            id: `sample-${i}`,
-            name: sampleImages[i].name,
-            description: sampleImages[i].description,
-            image: sampleImages[i].url,
-            price: 99.99,
-            featured: true
-          });
-        }
-      }
-      
-      setFeaturedProducts(enhancedFeatured);
-
-      // Get new arrivals
-      const newProducts = [...products]
-        .sort((a, b) => new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now()))
-        .slice(0, 4);
-      setNewArrivals(newProducts);
-
-      // Get best sellers
-      const best = [...products]
-        .sort((a, b) => (b.sold || 0) - (a.sold || 0))
-        .slice(0, 4);
-      setBestSellers(best);
-    } else if (!products || products.length === 0) {
-      // Create sample featured products if no products exist
-      const sampleFeatured = sampleImages.map((sample, index) => ({
-        id: `sample-${index}`,
-        name: sample.name,
-        description: sample.description,
-        image: sample.url,
-        price: 99.99,
-        featured: true
-      }));
-      setFeaturedProducts(sampleFeatured);
-      setNewArrivals(sampleFeatured);
-      setBestSellers(sampleFeatured);
+    if (products.length > 0) {
+      setFeaturedProducts(getFeaturedProducts());
+      setNewArrivals(getNewArrivals());
+      setBestSellers(getBestSellers());
     }
   }, [products]);
+
+  // GSAP Animations
+  useEffect(() => {
+    // Hero Section Animation
+    gsap.from(heroRef.current, {
+      opacity: 0,
+      y: 50,
+      duration: 1,
+      ease: 'power3.out'
+    });
+
+    // New Arrivals Animation
+    gsap.from(newArrivalsRef.current.querySelectorAll('.product-card'), {
+      scrollTrigger: {
+        trigger: newArrivalsRef.current,
+        start: 'top center+=100',
+        toggleActions: 'play none none reverse'
+      },
+      opacity: 0,
+      y: 30,
+      stagger: 0.1,
+      duration: 0.8,
+      ease: 'power2.out'
+    });
+
+    // Best Sellers Animation
+    gsap.from(bestSellersRef.current.querySelectorAll('.product-card'), {
+      scrollTrigger: {
+        trigger: bestSellersRef.current,
+        start: 'top center+=100',
+        toggleActions: 'play none none reverse'
+      },
+      opacity: 0,
+      y: 30,
+      stagger: 0.1,
+      duration: 0.8,
+      ease: 'power2.out'
+    });
+
+    // Features Animation
+    gsap.from(featuresRef.current.querySelectorAll('.feature-card'), {
+      scrollTrigger: {
+        trigger: featuresRef.current,
+        start: 'top center+=100',
+        toggleActions: 'play none none reverse'
+      },
+      opacity: 0,
+      y: 20,
+      stagger: 0.2,
+      duration: 0.6,
+      ease: 'power2.out'
+    });
+  }, []);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % featuredProducts.length);
@@ -156,7 +172,7 @@ export default function Home() {
   return (
     <div className="space-y-16">
       {/* Hero Section with Featured Products Carousel */}
-      <section className="relative h-[600px] overflow-hidden">
+      <section ref={heroRef} className="relative h-[600px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -242,181 +258,161 @@ export default function Home() {
       </section>
 
       {/* New Arrivals Section */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
-            New Arrivals
-          </h2>
-          <Link
-            to="/shop"
-            className="flex items-center text-sm hover:underline"
-            style={{ color: themeColors.primaryColor }}
-          >
-            View All
-            <ArrowRight className="ml-1 w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {newArrivals.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group relative"
+      <section ref={newArrivalsRef} className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
+              New Arrivals
+            </h2>
+            <Link
+              to="/shop"
+              className="flex items-center text-sm hover:underline"
+              style={{ color: themeColors.primaryColor }}
             >
-              <Link to={`/product/${product.id}`}>
-                <div 
-                  className="relative overflow-hidden rounded-lg aspect-square mb-4"
-                  style={{ backgroundColor: themeColors.cardColor }}
-                >
-                  <img
-                    src={product.image || sampleImages[index % sampleImages.length].url}
-                    alt={product.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = sampleImages[index % sampleImages.length].url;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-                  {product.name}
-                </h3>
-                <p className="text-sm mb-2" style={{ color: themeColors.textSecondaryColor }}>
-                  {product.description || "Premium quality product for your collection"}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold" style={{ color: themeColors.primaryColor }}>
-                    ${product.price}
-                  </span>
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="ml-1 text-sm" style={{ color: themeColors.textSecondaryColor }}>
-                      {product.rating || '4.5'}
-                    </span>
+              View All
+              <ArrowRight className="ml-1 w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {newArrivals.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group relative"
+              >
+                <Link to={`/product/${product.id}`}>
+                  <div 
+                    className="relative overflow-hidden rounded-lg aspect-square mb-4"
+                    style={{ backgroundColor: themeColors.cardColor }}
+                  >
+                    <img
+                      src={product.image || sampleImages[index % sampleImages.length].url}
+                      alt={product.name}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = sampleImages[index % sampleImages.length].url;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
+                    {product.name}
+                  </h3>
+                  <p className="text-sm mb-2" style={{ color: themeColors.textSecondaryColor }}>
+                    {product.description || "Premium quality product for your collection"}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold" style={{ color: themeColors.primaryColor }}>
+                      ${product.price}
+                    </span>
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="ml-1 text-sm" style={{ color: themeColors.textSecondaryColor }}>
+                        {product.rating || '4.5'}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Best Sellers Section */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
-            Best Sellers
-          </h2>
-          <Link
-            to="/shop"
-            className="flex items-center text-sm hover:underline"
-            style={{ color: themeColors.primaryColor }}
-          >
-            View All
-            <ArrowRight className="ml-1 w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bestSellers.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group relative"
+      <section ref={bestSellersRef} className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
+              Best Sellers
+            </h2>
+            <Link
+              to="/shop"
+              className="flex items-center text-sm hover:underline"
+              style={{ color: themeColors.primaryColor }}
             >
-              <Link to={`/product/${product.id}`}>
-                <div 
-                  className="relative overflow-hidden rounded-lg aspect-square mb-4"
-                  style={{ backgroundColor: themeColors.cardColor }}
-                >
-                  <img
-                    src={product.image || sampleImages[(index + 2) % sampleImages.length].url}
-                    alt={product.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = sampleImages[(index + 2) % sampleImages.length].url;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-                  {product.name}
-                </h3>
-                <p className="text-sm mb-2" style={{ color: themeColors.textSecondaryColor }}>
-                  {product.description || "Our customers' favorite choice"}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold" style={{ color: themeColors.primaryColor }}>
-                    ${product.price}
-                  </span>
-                  <div className="flex items-center">
-                    <TrendingUp className="w-4 h-4" style={{ color: themeColors.primaryColor }} />
-                    <span className="ml-1 text-sm" style={{ color: themeColors.textSecondaryColor }}>
-                      {product.sold || Math.floor(Math.random() * 50) + 20} sold
-                    </span>
+              View All
+              <ArrowRight className="ml-1 w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {bestSellers.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group relative"
+              >
+                <Link to={`/product/${product.id}`}>
+                  <div 
+                    className="relative overflow-hidden rounded-lg aspect-square mb-4"
+                    style={{ backgroundColor: themeColors.cardColor }}
+                  >
+                    <img
+                      src={product.image || sampleImages[(index + 2) % sampleImages.length].url}
+                      alt={product.name}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = sampleImages[(index + 2) % sampleImages.length].url;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
+                    {product.name}
+                  </h3>
+                  <p className="text-sm mb-2" style={{ color: themeColors.textSecondaryColor }}>
+                    {product.description || "Our customers' favorite choice"}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold" style={{ color: themeColors.primaryColor }}>
+                      ${product.price}
+                    </span>
+                    <div className="flex items-center">
+                      <TrendingUp className="w-4 h-4" style={{ color: themeColors.primaryColor }} />
+                      <span className="ml-1 text-sm" style={{ color: themeColors.textSecondaryColor }}>
+                        {product.sold || Math.floor(Math.random() * 50) + 20} sold
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center p-6 rounded-lg"
-            style={{ backgroundColor: themeColors.cardColor }}
-          >
-            <ShoppingBag className="w-12 h-12 mx-auto mb-4" style={{ color: themeColors.primaryColor }} />
-            <h3 className="text-xl font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-              Free Shipping
-            </h3>
-            <p style={{ color: themeColors.textSecondaryColor }}>
-              On orders over ${store.shipping?.freeThreshold || 100}
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-center p-6 rounded-lg"
-            style={{ backgroundColor: themeColors.cardColor }}
-          >
-            <Clock className="w-12 h-12 mx-auto mb-4" style={{ color: themeColors.primaryColor }} />
-            <h3 className="text-xl font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-              Fast Delivery
-            </h3>
-            <p style={{ color: themeColors.textSecondaryColor }}>
-              {store.shipping?.standardDays || 3}-{store.shipping?.expressDays || 5} days delivery
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="text-center p-6 rounded-lg"
-            style={{ backgroundColor: themeColors.cardColor }}
-          >
-            <Star className="w-12 h-12 mx-auto mb-4" style={{ color: themeColors.primaryColor }} />
-            <h3 className="text-xl font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-              Quality Products
-            </h3>
-            <p style={{ color: themeColors.textSecondaryColor }}>
-              Guaranteed quality
-            </p>
-          </motion.div>
+      <section ref={featuresRef} className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingCart className="w-8 h-8 text-orange-500" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
+              <p className="text-gray-600">On orders over ${store.shipping?.freeThreshold || 100}</p>
+            </div>
+            <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-orange-500" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Fast Delivery</h3>
+              <p className="text-gray-600">{store.shipping?.standardDays || 3}-{store.shipping?.expressDays || 5} days delivery</p>
+            </div>
+            <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-orange-500" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Quality Products</h3>
+              <p className="text-gray-600">Guaranteed quality</p>
+            </div>
+          </div>
         </div>
       </section>
     </div>
