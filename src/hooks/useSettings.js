@@ -1,34 +1,28 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
 
-export function useSettings() {
+export const useSettings = () => {
   const [settings, setSettings] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
+  // Fetch settings from localStorage
   const fetchSettings = async () => {
     try {
-      const settingsRef = doc(db, 'settings', 'store');
-      const docSnap = await getDoc(settingsRef);
-      
-      if (docSnap.exists()) {
-        setSettings(docSnap.data());
+      setIsLoading(true);
+      const savedSettings = localStorage.getItem('storeSettings');
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       } else {
-        // Initialize with default settings if none exist
+        // Default settings
         const defaultSettings = {
-          storeName: 'Khattak Store',
-          storeEmail: '',
-          storePhone: '',
-          storeAddress: '',
+          storeName: 'My Store',
+          storeEmail: 'contact@mystore.com',
+          storePhone: '+1 234 567 8900',
+          storeAddress: '123 Store Street, City, Country',
           currency: 'USD',
-          taxRate: '0',
-          shippingFee: '0',
-          freeShippingThreshold: '0',
+          taxRate: '10',
+          shippingFee: '5',
+          freeShippingThreshold: '50',
           socialLinks: {
             facebook: '',
             instagram: '',
@@ -39,32 +33,45 @@ export function useSettings() {
             paypal: false,
             cod: true,
           },
+          seo: {
+            metaTitle: 'My Store - Your One-Stop Shop',
+            metaDescription: 'Discover our collection of high-quality products at great prices.',
+            keywords: 'store, products, shopping, online store',
+            ogImage: '',
+            ogDescription: '',
+          }
         };
-        await setDoc(doc(db, 'settings', 'store'), defaultSettings);
         setSettings(defaultSettings);
+        localStorage.setItem('storeSettings', JSON.stringify(defaultSettings));
       }
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching settings:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Update settings
   const updateSettings = async (newSettings) => {
     try {
-      await setDoc(doc(db, 'settings', 'store'), newSettings);
       setSettings(newSettings);
+      localStorage.setItem('storeSettings', JSON.stringify(newSettings));
+      return newSettings;
     } catch (err) {
-      console.error('Error updating settings:', err);
+      setError(err.message);
       throw err;
     }
   };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
   return {
     settings,
     isLoading,
     error,
     updateSettings,
+    fetchSettings
   };
-} 
+}; 
