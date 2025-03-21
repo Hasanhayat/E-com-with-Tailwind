@@ -21,33 +21,33 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// High-quality demo product images
+const demoImages = [
+  {
+    url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2089&q=80',
+    name: 'Exclusive Summer Collection',
+    description: 'Explore our range of light, breathable fabrics perfect for summer'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1560243563-062bfc001d68?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
+    name: 'Designer Footwear',
+    description: 'Step into comfort with our premium quality footwear'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
+    name: 'Fall Fashion Essentials',
+    description: 'Get ready for the season with our curated collection of fall essentials'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1573855619003-97b4799dcd8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
+    name: 'Luxury Accessories',
+    description: 'Complete your look with our premium accessories collection'
+  }
+];
+
 // Local placeholder image instead of via.placeholder.com
 const placeholderImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
 const errorImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23FF5555%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23FFEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3EError%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
-
-// Sample high-quality product images
-const sampleImages = [
-  {
-    url: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80',
-    name: 'Luxury Collection 2023',
-    description: 'Discover premium quality fashion for all seasons'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1519759563599-e383275c91e8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80',
-    name: 'Summer Fashion Trends',
-    description: 'Beat the heat with our stylish summer collection'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1601924357840-6adaf9e1ea15?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80',
-    name: 'Winter Essentials',
-    description: 'Stay warm and stylish with our winter collection'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80',
-    name: 'Exclusive Limited Edition',
-    description: 'Shop our premium collection before it\'s gone'
-  }
-];
 
 const categories = [
   {
@@ -69,7 +69,7 @@ const categories = [
 
 export default function Home() {
   const { store, themeColors } = useTheme();
-  const { products, isLoading, getFeaturedProducts, getNewArrivals, getBestSellers } = useProducts();
+  const { products, loading, getFeaturedProducts, getNewArrivals, getBestSellers } = useProducts();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
@@ -80,67 +80,103 @@ export default function Home() {
   const newArrivalsRef = useRef(null);
   const bestSellersRef = useRef(null);
   const featuresRef = useRef(null);
+  const [animationsSetup, setAnimationsSetup] = useState(false);
 
+  // Initialize demo data if necessary
   useEffect(() => {
     if (products.length > 0) {
       setFeaturedProducts(getFeaturedProducts());
       setNewArrivals(getNewArrivals());
       setBestSellers(getBestSellers());
+    } else {
+      // Use demo images if no products exist
+      const demoProducts = demoImages.map((image, index) => ({
+        id: `demo-${index}`,
+        name: image.name,
+        description: image.description,
+        image: image.url,
+        price: (59.99 + index * 20).toFixed(2),
+        featured: true,
+        rating: (4 + Math.random()).toFixed(1),
+        sold: Math.floor(Math.random() * 120) + 30,
+        category: ['Men', 'Women', 'Accessories', 'Footwear'][index % 4]
+      }));
+      
+      setFeaturedProducts(demoProducts);
+      setNewArrivals(demoProducts);
+      setBestSellers(demoProducts);
     }
   }, [products]);
 
-  // GSAP Animations
+  // GSAP Animations - now with proper timing
   useEffect(() => {
-    // Hero Section Animation
-    gsap.from(heroRef.current, {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      ease: 'power3.out'
-    });
+    if (!animationsSetup && 
+        heroRef.current && 
+        newArrivalsRef.current && 
+        bestSellersRef.current && 
+        featuresRef.current) {
+      
+      // Set flag to prevent re-running animations
+      setAnimationsSetup(true);
+      
+      // Hero Section Animation
+      gsap.from(heroRef.current, {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        ease: 'power3.out'
+      });
 
-    // New Arrivals Animation
-    gsap.from(newArrivalsRef.current.querySelectorAll('.product-card'), {
-      scrollTrigger: {
-        trigger: newArrivalsRef.current,
-        start: 'top center+=100',
-        toggleActions: 'play none none reverse'
-      },
-      opacity: 0,
-      y: 30,
-      stagger: 0.1,
-      duration: 0.8,
-      ease: 'power2.out'
-    });
+      // Only try to animate if elements exist
+      const newArrivalElements = newArrivalsRef.current.querySelectorAll('.product-card');
+      if (newArrivalElements.length > 0) {
+        gsap.from(newArrivalElements, {
+          scrollTrigger: {
+            trigger: newArrivalsRef.current,
+            start: 'top center+=100',
+            toggleActions: 'play none none reverse'
+          },
+          opacity: 0,
+          y: 30,
+          stagger: 0.1,
+          duration: 0.8,
+          ease: 'power2.out'
+        });
+      }
 
-    // Best Sellers Animation
-    gsap.from(bestSellersRef.current.querySelectorAll('.product-card'), {
-      scrollTrigger: {
-        trigger: bestSellersRef.current,
-        start: 'top center+=100',
-        toggleActions: 'play none none reverse'
-      },
-      opacity: 0,
-      y: 30,
-      stagger: 0.1,
-      duration: 0.8,
-      ease: 'power2.out'
-    });
+      const bestSellerElements = bestSellersRef.current.querySelectorAll('.product-card');
+      if (bestSellerElements.length > 0) {
+        gsap.from(bestSellerElements, {
+          scrollTrigger: {
+            trigger: bestSellersRef.current,
+            start: 'top center+=100',
+            toggleActions: 'play none none reverse'
+          },
+          opacity: 0,
+          y: 30,
+          stagger: 0.1,
+          duration: 0.8,
+          ease: 'power2.out'
+        });
+      }
 
-    // Features Animation
-    gsap.from(featuresRef.current.querySelectorAll('.feature-card'), {
-      scrollTrigger: {
-        trigger: featuresRef.current,
-        start: 'top center+=100',
-        toggleActions: 'play none none reverse'
-      },
-      opacity: 0,
-      y: 20,
-      stagger: 0.2,
-      duration: 0.6,
-      ease: 'power2.out'
-    });
-  }, []);
+      const featureElements = featuresRef.current.querySelectorAll('.feature-card');
+      if (featureElements.length > 0) {
+        gsap.from(featureElements, {
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: 'top center+=100',
+            toggleActions: 'play none none reverse'
+          },
+          opacity: 0,
+          y: 20,
+          stagger: 0.2,
+          duration: 0.6,
+          ease: 'power2.out'
+        });
+      }
+    }
+  }, [animationsSetup, featuredProducts, newArrivals, bestSellers]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % featuredProducts.length);
@@ -158,7 +194,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [featuredProducts]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen">
         <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: themeColors.primaryColor }} />
@@ -280,7 +316,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative"
+                className="group relative product-card"
               >
                 <Link to={`/product/${product.id}`}>
                   <div 
@@ -288,12 +324,12 @@ export default function Home() {
                     style={{ backgroundColor: themeColors.cardColor }}
                   >
                     <img
-                      src={product.image || sampleImages[index % sampleImages.length].url}
+                      src={product.image || demoImages[index % demoImages.length].url}
                       alt={product.name}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = sampleImages[index % sampleImages.length].url;
+                        e.target.src = demoImages[index % demoImages.length].url;
                       }}
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
@@ -345,7 +381,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative"
+                className="group relative product-card"
               >
                 <Link to={`/product/${product.id}`}>
                   <div 
@@ -353,12 +389,12 @@ export default function Home() {
                     style={{ backgroundColor: themeColors.cardColor }}
                   >
                     <img
-                      src={product.image || sampleImages[(index + 2) % sampleImages.length].url}
+                      src={product.image || demoImages[(index + 2) % demoImages.length].url}
                       alt={product.name}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = sampleImages[(index + 2) % sampleImages.length].url;
+                        e.target.src = demoImages[(index + 2) % demoImages.length].url;
                       }}
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
@@ -396,14 +432,14 @@ export default function Home() {
                 <ShoppingCart className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
-              <p className="text-gray-600">On orders over ${store.shipping?.freeThreshold || 100}</p>
+              <p className="text-gray-600">On orders over ${store?.shipping?.freeThreshold || 100}</p>
             </div>
             <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Fast Delivery</h3>
-              <p className="text-gray-600">{store.shipping?.standardDays || 3}-{store.shipping?.expressDays || 5} days delivery</p>
+              <p className="text-gray-600">{store?.shipping?.standardDays || 3}-{store?.shipping?.expressDays || 5} days delivery</p>
             </div>
             <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
