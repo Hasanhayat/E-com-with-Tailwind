@@ -1,32 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import toast from 'react-hot-toast';
 
-export function useAuth() {
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [registerError, setRegisterError] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
         // Get additional user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        const userData = userDoc.data();
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName || userData?.name,
-          role: userData?.role || 'user',
-          ...userData,
-        });
+        try {
+          const userRef = doc(db, 'users', authUser.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            setUser({
+              uid: authUser.uid,
+              email: authUser.email,
+              displayName: authUser.displayName,
+              ...userData
+            });
+          } else {
+            // If no document exists, just use the auth user data
+            setUser({
+              uid: authUser.uid,
+              email: authUser.email,
+              displayName: authUser.displayName
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to basic auth user data
+          setUser({
+            uid: authUser.uid,
+            email: authUser.email,
+            displayName: authUser.displayName
+          });
+        }
       } else {
         setUser(null);
       }
@@ -37,76 +63,84 @@ export function useAuth() {
   }, []);
 
   const register = async ({ name, email, password }) => {
+    setRegisterError(null);
+    setIsRegistering(true);
+    
     try {
-      if (!name || !email || !password) {
-        toast.error('All fields are required.');
-        return;
-      }
-      setError(null);
-      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', firebaseUser.uid), {
-        name,
-        email,
-        role: 'user',
-        createdAt: new Date().toISOString(),
+      // Update display name
+      await updateProfile(userCredential.user, {
+        displayName: name
       });
       
-      toast.success('Registration successful!');
-      return firebaseUser;
-    } catch (err) {
-      if (err.code === 'auth/email-already-in-use') {
-        setError('This email is already in use. Please use a different email.');
-        toast.error('This email is already in use.');
-      } else {
-        setError(err.message);
-        toast.error('Registration failed. Please try again.');
-      }
-      throw err;
+      // Create user document in Firestore
+      const userRef = doc(db, 'users', userCredential.user.uid);
+      await setDoc(userRef, {
+        displayName: name,
+        email,
+        role: 'customer',
+        createdAt: new Date().toISOString()
+      });
+      
+      // Return user
+      return {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: name,
+        role: 'customer'
+      };
+    } catch (error) {
+      setRegisterError(error);
+      throw error;
+    } finally {
+      setIsRegistering(false);
     }
   };
 
   const login = async ({ email, password }) => {
+    setLoginError(null);
+    setIsLoggingIn(true);
+    
     try {
-      if (!email || !password) {
-        toast.error('Email and password are required.');
-        return;
-      }
-      setError(null);
-      const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Update last login time
-      await setDoc(doc(db, 'users', firebaseUser.uid), {
-        lastLoginAt: new Date().toISOString(),
-      }, { merge: true });
-      
-      toast.success('Logged in successfully!');
-      return firebaseUser;
-    } catch (err) {
-      setError(err.message);
-      toast.error('Login failed. Please check your credentials.');
-      throw err;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      setLoginError(error);
+      throw error;
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-      toast.success('Logged out successfully!');
-    } catch (err) {
-      console.error('Error signing out:', err);
-      toast.error('Logout failed. Please try again.');
-      throw err;
-    }
+    await signOut(auth);
   };
 
-  return {
+  const value = {
     user,
     isLoading,
-    error,
-    register,
+    isLoggingIn,
+    isRegistering,
     login,
+    register,
     logout,
+    loginError,
+    registerError
   };
-} 
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!isLoading ? children : <div>Loading...</div>}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === null) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}; 

@@ -1,454 +1,513 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../context/ThemeContext';
-import { useProducts } from '../hooks/useProducts';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ShoppingBag, 
-  Star, 
-  TrendingUp, 
-  Clock, 
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Loader,
-  ShoppingCart,
-  Heart,
-  Search
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
+import { ShoppingBag, Truck, ArrowRight, Star, Users, Shield } from 'lucide-react';
 import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// High-quality demo product images
-const demoImages = [
-  {
-    url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2089&q=80',
-    name: 'Exclusive Summer Collection',
-    description: 'Explore our range of light, breathable fabrics perfect for summer'
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1,
+    },
   },
-  {
-    url: 'https://images.unsplash.com/photo-1560243563-062bfc001d68?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
-    name: 'Designer Footwear',
-    description: 'Step into comfort with our premium quality footwear'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
-    name: 'Fall Fashion Essentials',
-    description: 'Get ready for the season with our curated collection of fall essentials'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1573855619003-97b4799dcd8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
-    name: 'Luxury Accessories',
-    description: 'Complete your look with our premium accessories collection'
-  }
+};
+
+// Hero section images from internet
+const heroImages = [
+  "https://images.unsplash.com/photo-1612619548304-fd96374f4dfd?q=80&w=1000&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1556741533-411cf82e4e2d?q=80&w=1000&auto=format&fit=crop",
 ];
 
-// Local placeholder image instead of via.placeholder.com
-const placeholderImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
-const errorImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23FF5555%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23FFEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3EError%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+// Featured products images from internet
+const featuredProducts = [
+  {
+    id: 1,
+    name: 'Classic White T-Shirt',
+    price: 29.99,
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop',
+    rating: 4.5,
+  },
+  {
+    id: 2,
+    name: 'Denim Jacket',
+    price: 89.99,
+    image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?q=80&w=1000&auto=format&fit=crop',
+    rating: 4.8,
+  },
+  {
+    id: 3,
+    name: 'Running Shoes',
+    price: 120.00,
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop',
+    rating: 4.7,
+  },
+  {
+    id: 4,
+    name: 'Leather Wallet',
+    price: 45.99,
+    image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1000&auto=format&fit=crop',
+    rating: 4.3,
+  },
+];
 
-const categories = [
+// Collection images from internet
+const collections = [
   {
-    name: 'Men',
-    image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf',
-    href: '/shop?category=men',
+    id: 1,
+    name: 'Summer Collection',
+    description: 'Discover our new summer styles',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
+    link: '/shop?collection=summer',
   },
   {
-    name: 'Women',
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b',
-    href: '/shop?category=women',
+    id: 2,
+    name: 'Winter Essentials',
+    description: 'Stay warm with our winter collection',
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1000&auto=format&fit=crop',
+    link: '/shop?collection=winter',
+  },
+];
+
+// Testimonial images from internet
+const testimonials = [
+  {
+    id: 1,
+    name: 'Sarah Johnson',
+    role: 'Regular Customer',
+    image: 'https://randomuser.me/api/portraits/women/44.jpg',
+    text: 'The quality of the products is exceptional. I\'ve been a loyal customer for years and have never been disappointed.',
   },
   {
-    name: 'Kids',
-    image: 'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7',
-    href: '/shop?category=kids',
+    id: 2,
+    name: 'Mike Thompson',
+    role: 'New Customer',
+    image: 'https://randomuser.me/api/portraits/men/32.jpg',
+    text: 'Fast shipping and excellent customer service. Will definitely shop here again!',
+  },
+  {
+    id: 3,
+    name: 'Emily Davis',
+    role: 'Fashion Blogger',
+    image: 'https://randomuser.me/api/portraits/women/67.jpg',
+    text: 'I love the unique styles they offer. Always on trend and great quality for the price.',
   },
 ];
 
 export default function Home() {
-  const { store, themeColors } = useTheme();
-  const { products, loading, getFeaturedProducts, getNewArrivals, getBestSellers } = useProducts();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [bestSellers, setBestSellers] = useState([]);
-
-  // Refs for GSAP animations
+  const { themeColors } = useTheme();
   const heroRef = useRef(null);
-  const newArrivalsRef = useRef(null);
-  const bestSellersRef = useRef(null);
-  const featuresRef = useRef(null);
-  const [animationsSetup, setAnimationsSetup] = useState(false);
+  const featuredRef = useRef(null);
+  const collectionsRef = useRef(null);
+  const testimonialsRef = useRef(null);
+  const benefitsRef = useRef(null);
 
-  // Initialize demo data if necessary
   useEffect(() => {
-    if (products.length > 0) {
-      setFeaturedProducts(getFeaturedProducts());
-      setNewArrivals(getNewArrivals());
-      setBestSellers(getBestSellers());
-    } else {
-      // Use demo images if no products exist
-      const demoProducts = demoImages.map((image, index) => ({
-        id: `demo-${index}`,
-        name: image.name,
-        description: image.description,
-        image: image.url,
-        price: (59.99 + index * 20).toFixed(2),
-        featured: true,
-        rating: (4 + Math.random()).toFixed(1),
-        sold: Math.floor(Math.random() * 120) + 30,
-        category: ['Men', 'Women', 'Accessories', 'Footwear'][index % 4]
-      }));
-      
-      setFeaturedProducts(demoProducts);
-      setNewArrivals(demoProducts);
-      setBestSellers(demoProducts);
-    }
-  }, [products]);
-
-  // GSAP Animations - now with proper timing
-  useEffect(() => {
-    if (!animationsSetup && 
-        heroRef.current && 
-        newArrivalsRef.current && 
-        bestSellersRef.current && 
-        featuresRef.current) {
-      
-      // Set flag to prevent re-running animations
-      setAnimationsSetup(true);
-      
-      // Hero Section Animation
-      gsap.from(heroRef.current, {
-        opacity: 0,
-        y: 50,
-        duration: 1,
-        ease: 'power3.out'
-      });
-
-      // Only try to animate if elements exist
-      const newArrivalElements = newArrivalsRef.current.querySelectorAll('.product-card');
-      if (newArrivalElements.length > 0) {
-        gsap.from(newArrivalElements, {
-          scrollTrigger: {
-            trigger: newArrivalsRef.current,
-            start: 'top center+=100',
-            toggleActions: 'play none none reverse'
-          },
-          opacity: 0,
-          y: 30,
-          stagger: 0.1,
-          duration: 0.8,
-          ease: 'power2.out'
-        });
+    // Hero animation
+    gsap.fromTo(
+      '.hero-content > *',
+      { opacity: 0, y: 20 },
+      {
+        opacity: 1,
+        y: 0,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: 'power2.out',
       }
-
-      const bestSellerElements = bestSellersRef.current.querySelectorAll('.product-card');
-      if (bestSellerElements.length > 0) {
-        gsap.from(bestSellerElements, {
-          scrollTrigger: {
-            trigger: bestSellersRef.current,
-            start: 'top center+=100',
-            toggleActions: 'play none none reverse'
-          },
-          opacity: 0,
-          y: 30,
-          stagger: 0.1,
-          duration: 0.8,
-          ease: 'power2.out'
-        });
-      }
-
-      const featureElements = featuresRef.current.querySelectorAll('.feature-card');
-      if (featureElements.length > 0) {
-        gsap.from(featureElements, {
-          scrollTrigger: {
-            trigger: featuresRef.current,
-            start: 'top center+=100',
-            toggleActions: 'play none none reverse'
-          },
-          opacity: 0,
-          y: 20,
-          stagger: 0.2,
-          duration: 0.6,
-          ease: 'power2.out'
-        });
-      }
-    }
-  }, [animationsSetup, featuredProducts, newArrivals, bestSellers]);
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % featuredProducts.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + featuredProducts.length) % featuredProducts.length);
-  };
-
-  // Auto advance carousel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      nextSlide();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [featuredProducts]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen">
-        <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: themeColors.primaryColor }} />
-        <p className="text-lg" style={{ color: themeColors.textPrimaryColor }}>
-          Loading...
-        </p>
-      </div>
     );
-  }
+
+    // Featured products animation
+    gsap.fromTo(
+      '.product-card',
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        stagger: 0.1,
+        duration: 0.6,
+        scrollTrigger: {
+          trigger: featuredRef.current,
+          start: 'top 80%',
+        },
+      }
+    );
+
+    // Collections animation
+    gsap.fromTo(
+      '.collection-item',
+      { opacity: 0, scale: 0.95 },
+      {
+        opacity: 1,
+        scale: 1,
+        stagger: 0.2,
+        duration: 0.8,
+        scrollTrigger: {
+          trigger: collectionsRef.current,
+          start: 'top 75%',
+        },
+      }
+    );
+
+    // Testimonials animation
+    gsap.fromTo(
+      '.testimonial-card',
+      { opacity: 0, x: -30 },
+      {
+        opacity: 1,
+        x: 0,
+        stagger: 0.15,
+        duration: 0.7,
+        scrollTrigger: {
+          trigger: testimonialsRef.current,
+          start: 'top 70%',
+        },
+      }
+    );
+
+    // Benefits animation
+    gsap.fromTo(
+      '.benefit-item',
+      { opacity: 0, y: 20 },
+      {
+        opacity: 1,
+        y: 0,
+        stagger: 0.1,
+        duration: 0.5,
+        scrollTrigger: {
+          trigger: benefitsRef.current,
+          start: 'top 80%',
+        },
+      }
+    );
+  }, []);
 
   return (
-    <div className="space-y-16">
-      {/* Hero Section with Featured Products Carousel */}
-      <section ref={heroRef} className="relative h-[600px] overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0"
-          >
-            {featuredProducts[currentSlide] && (
+    <div style={{ backgroundColor: themeColors.bgColor, color: themeColors.textPrimaryColor }}>
+      {/* Hero Section */}
+      <section 
+        className="relative overflow-hidden" 
+        style={{ minHeight: '85vh' }}
+        ref={heroRef}
+      >
+        <div className="absolute inset-0 z-0">
+          <div className="relative h-full w-full overflow-hidden">
+            {heroImages.map((image, index) => (
               <div 
-                className="relative h-full bg-cover bg-center"
-                style={{ 
-                  backgroundImage: `url(${featuredProducts[currentSlide].image})`,
-                  backgroundColor: themeColors.cardColor 
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${index === 0 ? 'opacity-100' : 'opacity-0'}`}
+                style={{
+                  backgroundImage: `url(${image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  filter: 'brightness(0.7)',
                 }}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div className="relative z-10 container mx-auto px-4 py-32 sm:px-6 lg:px-8 flex items-center min-h-[85vh]">
+          <div className="hero-content max-w-2xl">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6">
+              Discover Your Perfect Style
+            </h1>
+            <p className="text-xl text-white opacity-90 mb-8">
+              Explore our latest collection and find the perfect addition to your wardrobe.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <div className="absolute inset-0 bg-black bg-opacity-40" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white px-4">
-                    <motion.h1 
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="text-4xl md:text-6xl font-bold mb-4"
+                <Link
+                  to="/shop"
+                  className="px-8 py-3 text-base font-medium rounded-md text-white shadow-sm flex items-center gap-2"
+                  style={{ backgroundColor: themeColors.primaryColor }}
+                >
+                  Shop Now
+                  <ShoppingBag size={18} />
+                </Link>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link
+                  to="/about"
+                  className="px-8 py-3 text-base font-medium rounded-md bg-white text-gray-900 shadow-sm flex items-center gap-2"
+                >
+                  Learn More
+                  <ArrowRight size={18} />
+                </Link>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section 
+        className="py-16 sm:py-24"
+        ref={featuredRef}
+        style={{ backgroundColor: themeColors.bgSecondaryColor }}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: themeColors.textPrimaryColor }}>
+              Featured Products
+            </h2>
+            <p className="max-w-2xl mx-auto text-lg" style={{ color: themeColors.textSecondaryColor }}>
+              Discover our most popular and trending items
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                className="product-card bg-white rounded-lg overflow-hidden shadow-lg"
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              >
+                <Link to={`/product/${product.id}`}>
+                  <div className="h-64 overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-5" style={{ backgroundColor: themeColors.cardBgColor }}>
+                    <div className="flex items-center mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={16}
+                          className={i < Math.floor(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                        />
+                      ))}
+                      <span className="ml-1 text-sm text-gray-500">{product.rating}</span>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-1" style={{ color: themeColors.textPrimaryColor }}>
+                      {product.name}
+                    </h3>
+                    <p className="text-xl font-bold" style={{ color: themeColors.primaryColor }}>
+                      ${product.price.toFixed(2)}
+                    </p>
+                    <button
+                      className="mt-4 w-full py-2 text-sm font-medium rounded flex items-center justify-center gap-2 transition-colors"
+                      style={{ 
+                        backgroundColor: themeColors.primaryColor,
+                        color: 'white',
+                      }}
                     >
-                      {featuredProducts[currentSlide].name}
-                    </motion.h1>
-                    <motion.p 
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                      className="text-xl md:text-2xl mb-8"
+                      <ShoppingBag size={16} />
+                      Add to Cart
+                    </button>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-block"
+            >
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white"
+                style={{ backgroundColor: themeColors.primaryColor }}
+              >
+                View All Products
+                <ArrowRight size={18} />
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Collections */}
+      <section 
+        className="py-16"
+        ref={collectionsRef}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: themeColors.textPrimaryColor }}>
+              Our Collections
+            </h2>
+            <p className="max-w-2xl mx-auto text-lg" style={{ color: themeColors.textSecondaryColor }}>
+              Explore our carefully curated collections
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {collections.map((collection) => (
+              <motion.div
+                key={collection.id}
+                className="collection-item relative rounded-xl overflow-hidden shadow-lg group h-96"
+              >
+                <img
+                  src={collection.image}
+                  alt={collection.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {collection.name}
+                  </h3>
+                  <p className="text-white/90 mb-4">
+                    {collection.description}
+                  </p>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-block"
+                  >
+                    <Link
+                      to={collection.link}
+                      className="inline-flex items-center gap-1 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white border border-white/20 transition-colors hover:bg-white/20"
                     >
-                      {featuredProducts[currentSlide].description}
-                    </motion.p>
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      <Link
-                        to={`/product/${featuredProducts[currentSlide].id}`}
-                        className="inline-flex items-center px-6 py-3 rounded-full bg-white text-black hover:bg-gray-100 transition-colors"
-                      >
-                        Shop Now
-                        <ArrowRight className="ml-2" />
-                      </Link>
-                    </motion.div>
+                      Explore Collection
+                      <ArrowRight size={16} />
+                    </Link>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section 
+        className="py-16"
+        ref={benefitsRef}
+        style={{ backgroundColor: themeColors.bgSecondaryColor }}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: themeColors.textPrimaryColor }}>
+              Why Shop With Us
+            </h2>
+            <p className="max-w-2xl mx-auto text-lg" style={{ color: themeColors.textSecondaryColor }}>
+              We pride ourselves on providing the best shopping experience
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="benefit-item text-center p-6 rounded-lg" style={{ backgroundColor: themeColors.cardBgColor }}>
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: `${themeColors.primaryColor}20` }}>
+                <Truck size={24} style={{ color: themeColors.primaryColor }} />
+              </div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: themeColors.textPrimaryColor }}>Free Shipping</h3>
+              <p style={{ color: themeColors.textSecondaryColor }}>
+                Free shipping on all orders over $50. We deliver to your doorstep anywhere in the country.
+              </p>
+            </div>
+
+            <div className="benefit-item text-center p-6 rounded-lg" style={{ backgroundColor: themeColors.cardBgColor }}>
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: `${themeColors.primaryColor}20` }}>
+                <Shield size={24} style={{ color: themeColors.primaryColor }} />
+              </div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: themeColors.textPrimaryColor }}>Secure Payments</h3>
+              <p style={{ color: themeColors.textSecondaryColor }}>
+                Your payment information is always safe with our secure payment system.
+              </p>
+            </div>
+
+            <div className="benefit-item text-center p-6 rounded-lg" style={{ backgroundColor: themeColors.cardBgColor }}>
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: `${themeColors.primaryColor}20` }}>
+                <Users size={24} style={{ color: themeColors.primaryColor }} />
+              </div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: themeColors.textPrimaryColor }}>Customer Support</h3>
+              <p style={{ color: themeColors.textSecondaryColor }}>
+                Our friendly customer support team is available 24/7 to help you with any questions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section 
+        className="py-16"
+        ref={testimonialsRef}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: themeColors.textPrimaryColor }}>
+              What Our Customers Say
+            </h2>
+            <p className="max-w-2xl mx-auto text-lg" style={{ color: themeColors.textSecondaryColor }}>
+              Don't just take our word for it
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((testimonial) => (
+              <motion.div
+                key={testimonial.id}
+                className="testimonial-card p-6 rounded-lg shadow-lg"
+                style={{ backgroundColor: themeColors.cardBgColor }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                <div className="flex items-center mb-4">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full mr-4 object-cover"
+                  />
+                  <div>
+                    <h4 className="font-semibold" style={{ color: themeColors.textPrimaryColor }}>{testimonial.name}</h4>
+                    <p className="text-sm" style={{ color: themeColors.textSecondaryColor }}>{testimonial.role}</p>
                   </div>
                 </div>
-              </div>
-            )}
+                <p className="italic" style={{ color: themeColors.textSecondaryColor }}>"{testimonial.text}"</p>
+                <div className="mt-4 flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="py-16" style={{ backgroundColor: themeColors.primaryColor }}>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+            Ready to Start Shopping?
+          </h2>
+          <p className="text-white/90 text-lg max-w-2xl mx-auto mb-8">
+            Join thousands of satisfied customers and discover our latest collections today.
+          </p>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-block"
+          >
+            <Link
+              to="/shop"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-md font-medium shadow-lg"
+            >
+              Shop Now
+              <ShoppingBag size={20} />
+            </Link>
           </motion.div>
-        </AnimatePresence>
-
-        {/* Carousel Controls */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-all"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-all"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-
-        {/* Carousel Indicators */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-          {featuredProducts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide ? 'bg-white w-6' : 'bg-white bg-opacity-50'
-              }`}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* New Arrivals Section */}
-      <section ref={newArrivalsRef} className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
-              New Arrivals
-            </h2>
-            <Link
-              to="/shop"
-              className="flex items-center text-sm hover:underline"
-              style={{ color: themeColors.primaryColor }}
-            >
-              View All
-              <ArrowRight className="ml-1 w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newArrivals.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative product-card"
-              >
-                <Link to={`/product/${product.id}`}>
-                  <div 
-                    className="relative overflow-hidden rounded-lg aspect-square mb-4"
-                    style={{ backgroundColor: themeColors.cardColor }}
-                  >
-                    <img
-                      src={product.image || demoImages[index % demoImages.length].url}
-                      alt={product.name}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = demoImages[index % demoImages.length].url;
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-                    {product.name}
-                  </h3>
-                  <p className="text-sm mb-2" style={{ color: themeColors.textSecondaryColor }}>
-                    {product.description || "Premium quality product for your collection"}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold" style={{ color: themeColors.primaryColor }}>
-                      ${product.price}
-                    </span>
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="ml-1 text-sm" style={{ color: themeColors.textSecondaryColor }}>
-                        {product.rating || '4.5'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Best Sellers Section */}
-      <section ref={bestSellersRef} className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold" style={{ color: themeColors.textPrimaryColor }}>
-              Best Sellers
-            </h2>
-            <Link
-              to="/shop"
-              className="flex items-center text-sm hover:underline"
-              style={{ color: themeColors.primaryColor }}
-            >
-              View All
-              <ArrowRight className="ml-1 w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {bestSellers.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative product-card"
-              >
-                <Link to={`/product/${product.id}`}>
-                  <div 
-                    className="relative overflow-hidden rounded-lg aspect-square mb-4"
-                    style={{ backgroundColor: themeColors.cardColor }}
-                  >
-                    <img
-                      src={product.image || demoImages[(index + 2) % demoImages.length].url}
-                      alt={product.name}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = demoImages[(index + 2) % demoImages.length].url;
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: themeColors.textPrimaryColor }}>
-                    {product.name}
-                  </h3>
-                  <p className="text-sm mb-2" style={{ color: themeColors.textSecondaryColor }}>
-                    {product.description || "Our customers' favorite choice"}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold" style={{ color: themeColors.primaryColor }}>
-                      ${product.price}
-                    </span>
-                    <div className="flex items-center">
-                      <TrendingUp className="w-4 h-4" style={{ color: themeColors.primaryColor }} />
-                      <span className="ml-1 text-sm" style={{ color: themeColors.textSecondaryColor }}>
-                        {product.sold || Math.floor(Math.random() * 50) + 20} sold
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section ref={featuresRef} className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart className="w-8 h-8 text-orange-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
-              <p className="text-gray-600">On orders over ${store?.shipping?.freeThreshold || 100}</p>
-            </div>
-            <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-orange-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Fast Delivery</h3>
-              <p className="text-gray-600">{store?.shipping?.standardDays || 3}-{store?.shipping?.expressDays || 5} days delivery</p>
-            </div>
-            <div className="feature-card bg-white p-8 rounded-lg shadow-lg text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-orange-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Quality Products</h3>
-              <p className="text-gray-600">Guaranteed quality</p>
-            </div>
-          </div>
         </div>
       </section>
     </div>
