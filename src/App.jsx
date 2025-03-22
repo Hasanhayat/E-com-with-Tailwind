@@ -20,6 +20,8 @@ import AdminOrders from './pages/admin/Orders';
 import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
 import UserOrders from './pages/UserOrders';
+import AdminCustomers from './pages/admin/Customers';
+import AdminShipping from './pages/admin/Shipping';
 import { Loader } from 'lucide-react';
 import { useState, useEffect, createContext } from 'react';
 import OrderSuccess from './pages/OrderSuccess';
@@ -91,6 +93,8 @@ function AppContent() {
                     <Route path="/admin/products" element={<AdminProducts />} />
                     <Route path="/admin/orders" element={<AdminOrders />} />
                     <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/customers" element={<AdminCustomers />} />
+                    <Route path="/admin/shipping" element={<AdminShipping />} />
                     <Route path="/admin/settings" element={<AdminSettings />} />
                   </Route>
 
