@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store';
-import { AuthProvider } from './hooks/useAuth';
-import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './hooks/useAuth.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 
 // Import your pages
 import Home from './pages/Home';

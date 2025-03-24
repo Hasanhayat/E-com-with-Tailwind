@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '../../hooks/useSettings';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext.jsx';
 import { Plus, Trash2, Edit2, Save, X, Palette, FolderTree, Store, CreditCard, Share2, Settings as SettingsIcon } from 'lucide-react';
 
 export default function Settings() {

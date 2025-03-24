@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, updateDoc, doc, addDoc, query, orderBy, onSnapshot, where, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import toast from 'react-hot-toast';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);

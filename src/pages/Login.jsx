@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { Loader } from 'lucide-react';
 
 export default function Login() {

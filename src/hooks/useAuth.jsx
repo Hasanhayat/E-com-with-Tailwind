@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const userRef = doc(db, 'users', authUser.uid);
           const userSnap = await getDoc(userRef);
-          
+
           if (userSnap.exists()) {
             const userData = userSnap.data();
             setUser({
@@ -37,7 +37,6 @@ export const AuthProvider = ({ children }) => {
               ...userData
             });
           } else {
-            // If no document exists, just use the auth user data
             setUser({
               uid: authUser.uid,
               email: authUser.email,
@@ -46,7 +45,6 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
-          // Fallback to basic auth user data
           setUser({
             uid: authUser.uid,
             email: authUser.email,
@@ -63,36 +61,44 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = async ({ name, email, password }) => {
-    setRegisterError(null);
-    setIsRegistering(true);
-    
     try {
+      setIsRegistering(true);
+      setRegisterError(null);
+      
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       
-      // Update display name
-      await updateProfile(userCredential.user, {
+      // Update profile with display name
+      await updateProfile(user, {
         displayName: name
       });
       
-      // Create user document in Firestore
-      const userRef = doc(db, 'users', userCredential.user.uid);
-      await setDoc(userRef, {
-        displayName: name,
+      // Store additional user data in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
         email,
-        role: 'customer',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        role: 'customer'
       });
       
-      // Return user
-      return {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email,
-        displayName: name,
-        role: 'customer'
-      };
+      toast.success('Account created successfully!');
+      
+      return user;
     } catch (error) {
+      console.error('Registration error:', error);
       setRegisterError(error);
+      
+      let errorMessage = 'Failed to register. Please try again.';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already in use.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      }
+      
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsRegistering(false);
@@ -100,14 +106,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async ({ email, password }) => {
-    setLoginError(null);
-    setIsLoggingIn(true);
-    
     try {
+      setIsLoggingIn(true);
+      setLoginError(null);
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      toast.success('Successfully logged in!');
+      
       return userCredential.user;
     } catch (error) {
+      console.error('Login error:', error);
       setLoginError(error);
+      
+      let errorMessage = 'Failed to log in. Please check your credentials.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = 'Invalid email or password.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed login attempts. Please try again later.';
+      }
+      
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoggingIn(false);
@@ -115,24 +133,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await signOut(auth);
-  };
-
-  const value = {
-    user,
-    isLoading,
-    isLoggingIn,
-    isRegistering,
-    login,
-    register,
-    logout,
-    loginError,
-    registerError
+    try {
+      await signOut(auth);
+      toast.success('Successfully logged out!');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out. Please try again.');
+      throw error;
+    }
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {!isLoading ? children : <div>Loading...</div>}
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isLoggingIn,
+        isRegistering,
+        loginError,
+        registerError,
+        register,
+        login,
+        logout
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };
