@@ -26,21 +26,23 @@ export const useProducts = () => {
       const newProduct = {
         id: Date.now().toString(),
         ...productData,
+        sales: 0, // Initialize sales for sorting best sellers
+        rating: 0, // Initialize rating
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       const updatedProducts = [...products, newProduct];
       setProducts(updatedProducts);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      localStorage.setItem('products', JSON.stringify(updatedProducts)); // Save to localStorage
       return newProduct;
     } catch (err) {
-      setError(err.message);
+      setError('Failed to add product. Please try again.');
       throw err;
     }
   };
 
   // Update product
-  const updateProduct = async (id, productData) => {
+  const updateProduct = async ({ id, productData }) => {
     try {
       const updatedProducts = products.map(product =>
         product.id === id
@@ -48,10 +50,10 @@ export const useProducts = () => {
           : product
       );
       setProducts(updatedProducts);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      localStorage.setItem('products', JSON.stringify(updatedProducts)); // Save to localStorage
       return updatedProducts.find(product => product.id === id);
     } catch (err) {
-      setError(err.message);
+      setError('Failed to update product. Please try again.');
       throw err;
     }
   };

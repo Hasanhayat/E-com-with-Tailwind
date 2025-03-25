@@ -51,21 +51,15 @@ export default function AdminProducts() {
         category: formData.category,
         price: parseFloat(formData.price),
         description: formData.description,
-        imageUrl: formData.image, // Make sure we're using imageUrl consistently
+        imageUrl: formData.image, // Ensure imageUrl consistency
       };
 
       if (selectedProduct) {
-        await updateProduct({
-          id: selectedProduct.id,
-          productData,
-          image: formData.image instanceof File ? formData.image : null,
-        });
+        await updateProduct({ id: selectedProduct.id, productData }); // Update product
       } else {
-        await addProduct({
-          productData,
-          image: formData.image instanceof File ? formData.image : null,
-        });
+        await addProduct(productData); // Add new product
       }
+
       setIsModalOpen(false);
       setSelectedProduct(null);
       setFormData({
@@ -320,4 +314,4 @@ export default function AdminProducts() {
       )}
     </div>
   );
-} 
+}

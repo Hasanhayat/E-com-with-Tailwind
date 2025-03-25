@@ -78,7 +78,7 @@ export default function ProductDetails() {
           className="aspect-w-1 aspect-h-1 bg-gray-100 rounded-lg overflow-hidden"
         >
           <img
-            src={product.imageUrl || product.image || placeholderImage}
+            src={product.imageUrl || placeholderImage}
             alt={product.name}
             className="w-full h-full object-cover object-center rounded-lg"
             onError={(e) => {
@@ -161,4 +161,4 @@ export default function ProductDetails() {
       </div>
     </div>
   );
-} 
+}

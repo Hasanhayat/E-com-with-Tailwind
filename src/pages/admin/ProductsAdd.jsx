@@ -69,50 +69,27 @@ export default function ProductsAdd() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate form
-    if (!product.name || !product.description || !product.price || !product.stock) {
+    if (!product.name || !product.price || !product.stock) {
       setErrorMessage('Please fill in all required fields');
       return;
     }
-    
-    // If no image is provided, use a default placeholder
-    if (!product.image) {
-      setProduct({
-        ...product,
-        image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
-      });
-    }
-    
+
     try {
       setIsSubmitting(true);
-      
-      // Add the product
-      await addProduct(product);
-      
-      // Show success message
+      await addProduct(product); // Call addProduct from useProducts
       setSuccessMessage('Product added successfully!');
-      setErrorMessage('');
-      
-      // Reset form after a delay
-      setTimeout(() => {
-        setProduct({
-          name: '',
-          description: '',
-          price: '',
-          category: 'Men',
-          stock: '',
-          featured: false,
-          image: ''
-        });
-        setImagePreview('');
-        setImageFile(null);
-        setSuccessMessage('');
-      }, 2000);
+      setProduct({
+        name: '',
+        description: '',
+        price: '',
+        category: 'Men',
+        stock: '',
+        featured: false,
+        image: '',
+      });
+      setImagePreview('');
     } catch (error) {
-      console.error('Error adding product:', error);
       setErrorMessage('Failed to add product. Please try again.');
-      setSuccessMessage('');
     } finally {
       setIsSubmitting(false);
     }
@@ -428,4 +405,4 @@ export default function ProductsAdd() {
       </form>
     </div>
   );
-} 
+}

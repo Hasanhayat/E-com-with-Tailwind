@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { useProducts } from '../hooks/useProducts';
-import { updateFilters, clearFilters } from '../store/slices/productSlice';
+import { updateFilters, clearFilters, fetchProducts } from '../store/slices/productSlice';
 import { Loader, ShoppingCart, Heart, Star, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addToCart } from '../store/slices/cartSlice';
@@ -224,6 +224,10 @@ export default function Shop() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    dispatch(fetchProducts()); // Ensure products are fetched on mount
+  }, [dispatch]);
+
   const categories = ['all', 'men', 'women', 'kids'];
   const sortOptions = [
     { value: 'latest', label: 'Latest' },
@@ -324,4 +328,4 @@ export default function Shop() {
       </AnimatePresence>
     </div>
   );
-} 
+}
