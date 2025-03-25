@@ -7,7 +7,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
+import { auth, db } from '../firebase';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
