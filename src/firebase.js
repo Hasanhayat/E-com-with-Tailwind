@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAYSx7e644npoGgjqdm6GkVTY3G-EKvc2A",
-  authDomain: "khattak-store.firebaseapp.com",
-  projectId: "khattak-store",
-  storageBucket: "khattak-store.firebasestorage.app",
-  messagingSenderId: "133398398632",
-  appId: "1:133398398632:web:e2364db10ae1eff6c9a49d",
-  measurementId: "G-P5GP0FVK4K"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Cloudinary configuration
@@ -24,4 +24,4 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-export default app; 
+export default app;

@@ -5,7 +5,7 @@ import { Loader, Search, Filter, ChevronDown } from 'lucide-react';
 import OrderDetail from '../../components/OrderDetail';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext.jsx';
 import { 
   ChevronLeft,
   ArrowUp,

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { useOrders } from '../hooks/useOrders';
 import { clearCart } from '../store/slices/cartSlice';
 import { Loader, CreditCard, Truck, Check, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useCart } from '../hooks/useCart';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 // Local placeholder image instead of via.placeholder.com
 const placeholderImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_189b3ff4cca%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A15pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_189b3ff4cca%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22110.5%22%20y%3D%22157.1%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
@@ -18,6 +20,8 @@ const Checkout = () => {
   const { createOrder } = useOrders();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { cart, cartTotal, clearCart: clearCartHook } = useCart();
+  const { themeColors } = useTheme();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -35,6 +39,7 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
 
   const [cardData, setCardData] = useState({
     cardNumber: '',
@@ -165,29 +170,28 @@ const Checkout = () => {
     setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = async () => {
-    // Validate card details if payment method is card
-    if (formData.paymentMethod === 'card' && !validateStep(3)) {
-      return;
-    }
-    
-    if (items.length === 0) {
-      toast.error('Your cart is empty. Please add items to checkout.');
-      navigate('/shop');
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
     
     try {
-      setIsSubmitting(true);
+      // Validate form fields
+      if (!formData.address || !formData.city || !formData.postalCode || !formData.country) {
+        throw new Error('Please fill in all shipping details');
+      }
       
+      if (formData.paymentMethod === 'card' && (!cardData.cardNumber || !cardData.cardName || !cardData.cardExpiry || !cardData.cardCvv)) {
+        throw new Error('Please fill in all payment details');
+      }
+      
+      // Create order object
       const orderData = {
-        userId: user?.uid || 'guest',
-        items: items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
+        user: user?.uid || 'guest',
+        products: cart.map(item => ({
+          product: item.id,
           quantity: item.quantity,
-          imageUrl: item.imageUrl,
+          price: item.price
         })),
         shippingInfo: {
           name: formData.name,
@@ -203,40 +207,33 @@ const Checkout = () => {
           method: formData.paymentMethod,
           status: formData.paymentMethod === 'cod' ? 'pending' : 'paid',
           transactionId: formData.paymentMethod === 'cod' ? null : `txn_${Date.now()}`,
-          cardDetails: formData.paymentMethod === 'card' ? {
-            cardNumber: `xxxx-xxxx-xxxx-${cardData.cardNumber.slice(-4)}`, // Store only last 4 digits for security
-            cardName: cardData.cardName,
-            cardExpiry: cardData.cardExpiry
-          } : null
+          cardNumber: cardData.cardNumber.slice(-4).padStart(16, '*'),
+          cardName: cardData.cardName,
+          cardExpiry: cardData.cardExpiry,
+          cvv: '***'
         },
         notes: formData.notes,
-        totalAmount: totalAmount,
+        totalAmount: totalAmount || cartTotal,
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: new Date()
       };
       
-      console.log('Submitting order:', orderData);
-      const createdOrder = await createOrder(orderData);
-      console.log('Order created successfully:', createdOrder);
+      // Call API to create order
+      const response = await createOrder(orderData);
       
-      // Clear cart first to prevent redirect to shop in useEffect
+      // Clear cart after successful order
+      clearCartHook();
       dispatch(clearCart());
       
       // Show success message
       toast.success('Order placed successfully!');
       
-      // Navigate after a small delay to ensure state changes have processed
-      setTimeout(() => {
-        if (createdOrder && createdOrder.id) {
-          navigate(`/order-success/${createdOrder.id}`, { replace: true });
-        } else {
-          navigate('/thank-you', { replace: true });
-        }
-      }, 500);
-      
+      // Navigate to success page
+      navigate(`/order-success/${response.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
-      toast.error('Failed to place order. Please try again.');
+      setError(error.message || 'Something went wrong. Please try again.');
+      toast.error(error.message || 'Failed to place order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext.jsx';
 import { useSettings } from '../../hooks/useSettings';
 import { Truck, Clock, DollarSign, Package, Save, AlertCircle } from 'lucide-react';
 

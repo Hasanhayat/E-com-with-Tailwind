@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, addDoc, query, orderBy, onSnapshot, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { collection, getDocs, updateDoc, doc, addDoc, query, orderBy, onSnapshot, where, getDoc } from 'firebase/firestore';
+import { db } from '../firebase.js';
 import toast from 'react-hot-toast';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth.jsx';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
@@ -228,7 +228,89 @@ export function useOrders() {
     if (!status || status === 'all') return orders;
     return orders.filter(order => order.status === status);
   };
-  
+
+  const createOrder = async (orderData) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const orderRef = collection(db, 'orders');
+      const newOrder = {
+        ...orderData,
+        userId: user?.uid || 'guest',
+        createdAt: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(orderRef, newOrder);
+      
+      setIsLoading(false);
+      return { id: docRef.id, ...newOrder };
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
+  const getOrders = async (userId = user?.uid) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      if (!userId) {
+        throw new Error('User ID is required to fetch orders');
+      }
+      
+      const ordersRef = collection(db, 'orders');
+      const q = query(
+        ordersRef, 
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const orders = [];
+      
+      querySnapshot.forEach((doc) => {
+        orders.push({ id: doc.id, ...doc.data() });
+      });
+      
+      setIsLoading(false);
+      return orders;
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
+  const getOrder = async (orderId) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      if (!orderId) {
+        throw new Error('Order ID is required');
+      }
+      
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await getDoc(orderRef);
+      
+      if (!orderSnap.exists()) {
+        throw new Error('Order not found');
+      }
+      
+      const orderData = { id: orderSnap.id, ...orderSnap.data() };
+      
+      setIsLoading(false);
+      return orderData;
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
   return { 
     orders, 
     isLoading, 
@@ -238,6 +320,9 @@ export function useOrders() {
     deleteOrder, 
     getOrderById, 
     filterOrders,
-    orderStatuses
+    orderStatuses,
+    createOrder,
+    getOrders,
+    getOrder
   };
 } 

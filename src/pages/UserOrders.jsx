@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useOrders } from '../hooks/useOrders';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { Loader, ShoppingBag, ChevronRight, ClipboardList } from 'lucide-react';
 
 // Local placeholder image

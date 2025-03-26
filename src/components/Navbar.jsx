@@ -1,12 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ShoppingCart, User, Menu, X, Home, Package, Settings, LogOut, Search, Users, List, Heart, Globe, Moon, Sun, Palette } from 'lucide-react';
 import { useState, useContext, useEffect } from 'react';
 import { LoadingContext } from '../App';
 import toast from 'react-hot-toast';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
