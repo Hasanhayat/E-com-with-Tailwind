@@ -19,7 +19,7 @@ const ProductCard = React.memo(({ product, onAddToCart, isLoading }) => {
   // Generate random rating between 3.5 and 5.0
   const rating = useMemo(() => (Math.random() * 1.5 + 3.5).toFixed(1), []);
   
-  
+
   return (
     <motion.div
       layout
@@ -329,4 +329,5 @@ export default function Shop() {
       </AnimatePresence>
     </div>
   );
-}
+}    
+
