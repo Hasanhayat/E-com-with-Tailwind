@@ -19,6 +19,8 @@ export default function ProductDetails() {
   const [pageLoading, setPageLoading] = useState(true);
   
   
+
+  
   useEffect(() => {
     // Simulate page loading
     const timer = setTimeout(() => {
